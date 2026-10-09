@@ -20,18 +20,29 @@ CHROMIUM_VERSION := $(shell python3 -c "import json;print(json.load(open('$(CHRO
 
 ZIP_EXCLUDES := -x "*.git*" -x "*.DS_Store" -x "*.md"
 
-.PHONY: all build sync firefox chromium chrome clean lint run-firefox version help
+.PHONY: all build check-versions sync firefox chromium chrome clean lint run-firefox version help
 
 all: build
 
 ## build both packages
-build: firefox chromium
+build: check-versions firefox chromium
 
-## sync — picker.js and icons are shared: copy the Firefox source into chromium/ before building
+## check-versions — both manifests must carry the same version (firefox/ is the source of truth)
+check-versions:
+	@python3 -c "import json,sys; \
+	f=json.load(open('$(FIREFOX_DIR)/manifest.json'))['version']; \
+	c=json.load(open('$(CHROMIUM_DIR)/manifest.json'))['version']; \
+	sys.exit('VERSION MISMATCH: firefox %s != chromium %s (run: make sync)' % (f,c)) if f!=c else print('version %s (firefox == chromium)' % f)"
+
+## sync — shared source: pull picker.js, icons and version from firefox/ into chromium/
 sync:
 	cp $(FIREFOX_DIR)/picker.js $(CHROMIUM_DIR)/picker.js
 	rm -rf $(CHROMIUM_DIR)/icons && cp -r $(FIREFOX_DIR)/icons $(CHROMIUM_DIR)/icons
-	@echo "synced picker.js + icons: firefox/ -> chromium/"
+	@python3 -c "import json; \
+	p='$(CHROMIUM_DIR)/manifest.json'; m=json.load(open(p)); \
+	m['version']=json.load(open('$(FIREFOX_DIR)/manifest.json'))['version']; \
+	f=open(p,'w'); f.write(json.dumps(m,indent=2)+chr(10)); f.close()"
+	@echo "synced picker.js + icons + version: firefox/ -> chromium/"
 
 ## firefox  — build dist/copy-ui-path-lite-firefox-<version>.xpi (a zip; install via about:addons)
 firefox:

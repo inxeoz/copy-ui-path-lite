@@ -104,10 +104,13 @@ make version    # print manifest versions
 
 ## Versions
 
-Both manifests are at **1.10.1** and are kept in step, since they ship the same
-`picker.js`:
+Both builds share one version number — currently **1.10.1**. `firefox/manifest.json`
+is the single source of truth; `make sync` copies its version into
+`chromium/manifest.json`, and every build runs `make check-versions` first, so the
+two can never drift apart.
 
-- Firefox: [`firefox/manifest.json`](firefox/manifest.json)
-- Chromium: [`chromium/manifest.json`](chromium/manifest.json)
-
-When you bump a release, bump both.
+```bash
+# release a new version
+edit firefox/manifest.json   # bump "version"
+make sync                    # pushes version + picker.js + icons into chromium/
+make                         # fails if versions ever differ
