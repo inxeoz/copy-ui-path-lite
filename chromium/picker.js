@@ -258,10 +258,6 @@
     return buildXPath(el);
   }
 
-  function formatPreview(el) {
-    return buildXPath(el);
-  }
-
   function rgbToHex(str) {
     var m = str.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/);
     if (!m) return null;
@@ -470,9 +466,9 @@
     return formatPath(el);
   }
 
+  // The preview shows exactly the selector that will be copied for the current mode.
   function getPreviewPath(el, mode) {
-    if (mode === 'xpath' || mode === 'pw' || mode === 'css') return getSelectorPath(el, mode);
-    return formatPreview(el);
+    return getSelectorPath(el, mode);
   }
 
   function calcTestidPercent(el) {
@@ -585,7 +581,10 @@
   var freezeHint = shadow.querySelector('#freeze-hint');
   var formatMode = 'context';
   var frozen = false;
-  formatSelect.addEventListener('change', function() { formatMode = this.value; });
+  formatSelect.addEventListener('change', function() {
+    formatMode = this.value;
+    if (currentEl) renderPathDisplay(currentEl, getZ(currentEl));
+  });
 
   // ── Computed props config (localStorage) ──────────────────────────
   var CFG_KEY = 'ctp-lite-computed-props';
@@ -785,13 +784,30 @@
     centerLabel.style.display = 'block';
   }
 
+  function getZ(el) {
+    try { var z = window.getComputedStyle(el).zIndex; return z || 'auto'; } catch (e) { return 'auto'; }
+  }
+
+  // Renders the path preview for `el` in the current formatMode. Called on hover,
+  // on selection change and after navigating — so switching format updates it live.
+  function renderPathDisplay(el, zVal) {
+    var pb = buildPathData(el, getPreviewPath(el, formatMode), zVal);
+    currentPath = pb.toText();
+    pathDisplay.textContent = '';
+    pb.appendTo(pathDisplay);
+    if (!dragging) {
+      var w = Math.min(420, Math.max(280, Math.ceil(currentPath.length * 7.5) + 160));
+      dialog.style.width = w + 'px';
+    }
+  }
+
   function updateUI(el) {
     if (!el || el === currentEl) return;
     currentEl = el;
     var rect = el.getBoundingClientRect();
     var vw = window.innerWidth;
     var vh = window.innerHeight;
-    var zVal = (function() { try { var z = window.getComputedStyle(el).zIndex; return z || 'auto'; } catch(e){ return 'auto'; } })();
+    var zVal = getZ(el);
 
     // SVG spotlight
     ocean.setAttribute('d', 'M0 0h' + vw + 'v' + vh + 'h-' + vw + 'z M' + rect.left + ' ' + rect.top + 'h' + rect.width + 'v' + rect.height + 'h-' + rect.width + 'z');
@@ -825,14 +841,7 @@
     updateCenterLabel(rect, zVal);
 
     // Path display
-    var pb = buildPathData(el, getPreviewPath(el, formatMode), zVal);
-    currentPath = pb.toText();
-    pathDisplay.textContent = '';
-    pb.appendTo(pathDisplay);
-    if (!dragging) {
-      var w = Math.min(420, Math.max(280, Math.ceil(currentPath.length * 7.5) + 160));
-      dialog.style.width = w + 'px';
-    }
+    renderPathDisplay(el, zVal);
     // toolbox: Copy Selected id button — enabled only when element has a unique id
     if (copyIdBtn) {
       var uid = getSelectedUniqueId(el);
@@ -843,7 +852,7 @@
 
   function doCopy(stayOpen) {
     if (!currentPath) return;
-    var zVal = (function() { try { var z = window.getComputedStyle(currentEl).zIndex; return z || 'auto'; } catch(e){ return 'auto'; } })();
+    var zVal = getZ(currentEl);
     var selector = getSelectorPath(currentEl, formatMode);
     var isContextMode = (formatMode === 'auto' || formatMode === 'context');
     var copyText = isContextMode ? buildPathData(currentEl, selector, zVal).toText() : selector;
