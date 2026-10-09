@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "copy-ui-path-lite",
+  "version": "1.10.1",
+  "description": "Click the icon to pick an element and copy its selector path",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "contextMenus"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "commands": {
+    "pick-element": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+X"
+      },
+      "description": "Pick element from page"
+    }
+  },
+  "browser_action": {
+    "default_title": "Pick element from page",
+    "default_icon": {
+      "48": "icons/icon-48.png",
+      "96": "icons/icon-96.png"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "copy-ui-path-lite@ui",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}
