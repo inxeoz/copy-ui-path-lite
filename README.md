@@ -14,10 +14,10 @@ Ships as a single codebase with two builds:
 
 ```
 firefox/     Firefox extension source (MV2) — background.js, picker.js, icons/, manifest.json
-chromium/    Chromium extension source (MV3) — background.js, picker.js, manifest.json
+chromium/    Chromium extension source (MV3) — background.js, picker.js, icons/, manifest.json
 store/       Store listing assets (appstore.png)
 dist/        Build output (gitignored)
-Makefile     Build / lint / run helpers
+Makefile     Build / sync / lint / run helpers
 ```
 
 ## Install (development)
@@ -64,9 +64,9 @@ into the page.
 
 ### Chromium picker
 
-Minimal version: hover, preview, click to copy `URL | path [z-index="…"]`.
-Same overlay, toast, drag, `Esc`, and **Copy Selected id** button, but no format
-select, computed-style panel, or freeze navigation.
+Same picker as Firefox. `firefox/picker.js` is browser-agnostic (no `browser.*` /
+`chrome.*` calls), so both builds ship the identical file — run `make sync` after
+editing it in `firefox/` to copy it (and the icons) into `chromium/`.
 
 ## Copied path anatomy
 
@@ -75,11 +75,10 @@ Paths are built from a set of test attributes, in order:
 `data-automation`, `data-e2e`, `data-test-id`, `data-component`, `data-element`.
 
 ```text
-checkout | section[1] > form[2] > button[1](#sign-in)   → Context (Firefox)
-/body/section[1]/form[2]/button[1]                       → XPath  (Firefox)
-section:nth-child(1) > form:nth-child(2) > #sign-in      → CSS    (Firefox)
-section[1] > form[2] > btn:submit                        → Playwright (Firefox)
-https://example.com/checkout | section[1] > form[2] > … [z-index="auto"]  → Chromium
+checkout | section[1] > form[2] > button[1](#sign-in)          → Context (default)
+/body/section[1]/form[2]/button[1]                             → XPath
+section:nth-child(1) > form:nth-child(2) > #sign-in            → CSS
+section[1] > form[2] > btn:submit                              → Playwright
 ```
 
 Annotation rules honored by the path builder:
@@ -87,12 +86,13 @@ Annotation rules honored by the path builder:
 - `data-test-context="name"` — prefixes the path with `name | `.
 - `data-testlabel="…"` — appended to the test id, e.g. `card:product[data-testlabel="Jacket"]`.
 - `data-testignore` — the element is skipped when walking up.
-- `{shadow}` markers mark shadow-DOM boundaries in Firefox.
+- `{shadow}` markers mark shadow-DOM boundaries.
 
 ## Build
 
 ```bash
 make            # both packages into dist/
+make sync       # copy firefox/picker.js + icons into chromium/ (shared source)
 make firefox    # dist/copy-ui-path-lite-firefox-<version>.xpi
 make chromium   # dist/copy-ui-path-lite-chromium-<version>.zip
 make lint       # web-ext lint on firefox/ (needs Node)
@@ -104,7 +104,10 @@ make version    # print manifest versions
 
 ## Versions
 
-- Firefox: read from [`firefox/manifest.json`](firefox/manifest.json)
-- Chromium: read from [`chromium/manifest.json`](chromium/manifest.json)
+Both manifests are at **1.10.1** and are kept in step, since they ship the same
+`picker.js`:
 
-The two builds version independently.
+- Firefox: [`firefox/manifest.json`](firefox/manifest.json)
+- Chromium: [`chromium/manifest.json`](chromium/manifest.json)
+
+When you bump a release, bump both.

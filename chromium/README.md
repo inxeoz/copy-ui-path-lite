@@ -2,6 +2,9 @@
 
 Source for the Chrome / Edge / Chromium build. See the [project README](../README.md).
 
+`picker.js` and `icons/` are shared with the Firefox build — edit them in
+[`../firefox/`](../firefox/) and run `make sync` from the project root.
+
 ## Load unpacked
 
 1. Open `chrome://extensions`

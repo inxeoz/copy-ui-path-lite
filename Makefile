@@ -20,12 +20,18 @@ CHROMIUM_VERSION := $(shell python3 -c "import json;print(json.load(open('$(CHRO
 
 ZIP_EXCLUDES := -x "*.git*" -x "*.DS_Store" -x "*.md"
 
-.PHONY: all build firefox chromium chrome clean lint run-firefox version help
+.PHONY: all build sync firefox chromium chrome clean lint run-firefox version help
 
 all: build
 
 ## build both packages
 build: firefox chromium
+
+## sync — picker.js and icons are shared: copy the Firefox source into chromium/ before building
+sync:
+	cp $(FIREFOX_DIR)/picker.js $(CHROMIUM_DIR)/picker.js
+	rm -rf $(CHROMIUM_DIR)/icons && cp -r $(FIREFOX_DIR)/icons $(CHROMIUM_DIR)/icons
+	@echo "synced picker.js + icons: firefox/ -> chromium/"
 
 ## firefox  — build dist/copy-ui-path-lite-firefox-<version>.xpi (a zip; install via about:addons)
 firefox:
