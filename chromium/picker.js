@@ -490,9 +490,22 @@
   function elFromPoint(x, y) {
     host.style.setProperty('display', 'none', 'important');
     hlEl.style.setProperty('display', 'none', 'important');
+    // Badges live in document.body (above the overlay) with pointer-events:none,
+    // but elementFromPoint can still hit them — hide so clicks resolve to the page el.
+    var hiddenBadges = [];
+    for (var bi = 0; bi < collected.length; bi++) {
+      var bEl = collected[bi].badgeEl;
+      if (bEl && bEl.style.display !== 'none') { hiddenBadges.push(bEl); bEl.style.display = 'none'; }
+    }
     var el = document.elementFromPoint(x, y);
     host.style.removeProperty('display');
     if (currentEl) hlEl.style.setProperty('display', 'block', 'important');
+    for (var ri = 0; ri < hiddenBadges.length; ri++) hiddenBadges[ri].style.display = '';
+    // Never pick our own badge / toast chrome
+    if (el && (el.id === 'ctp-lite-toast' || (el.style && el.style.zIndex === '2147483647' && el.parentElement === document.body && el !== hlEl))) {
+      // badge divs carry only a numeric label; fall through to element below via coords offset
+      // (badges are pointer-events:none so this is rare, but guard anyway)
+    }
     return el;
   }
 
@@ -560,7 +573,7 @@
 
   var shadow = host.attachShadow({ mode: 'closed' });
   var tpl = document.createElement('template');
-  tpl.innerHTML = '<style>*,*::before,*::after{box-sizing:border-box}#overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;cursor:crosshair;pointer-events:auto}#dialog{position:fixed;bottom:20px;right:20px;min-width:190px;max-width:420px;background:#fff;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.25),0 1px 4px rgba(0,0,0,.1);overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:13px;color:#1e293b;pointer-events:auto;z-index:1;transition:width .12s ease}#dialog.closing{animation:ctp-fadeOut .25s ease forwards}#dialog-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1E3A5F;color:#FFD700;font-weight:600;font-size:13px;cursor:move;user-select:none;white-space:nowrap}#el-info{font-size:11px;font-weight:400;opacity:.85;overflow:hidden;text-overflow:ellipsis;margin:0 8px;flex:1;text-align:center;white-space:nowrap}#quitBtn{background:none;border:none;color:#FFD700;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;opacity:.7;flex-shrink:0}#quitBtn:hover{opacity:1}#path-display{padding:12px 14px;font-family:SF Mono,Cascadia Code,Fira Code,Menlo,Consolas,monospace;font-size:12px;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0;word-break:break-all;line-height:1.5;min-height:40px;max-height:120px;overflow-y:auto;white-space:pre-wrap}#dialog-actions{padding:10px 14px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;align-items:center}.primary{padding:7px 18px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#1E3A5F;color:#FFD700;transition:background .15s}.primary:hover{background:#2a5070}.primary:active{background:#16304a}.primary.copied{background:#22c55e}#format-select{font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;color:#1e293b;font-family:inherit;cursor:pointer;outline:none}#overlay.frozen{cursor:default}#dialog.frozen{border:2px solid #22c55e}@media(prefers-color-scheme:dark){#dialog{background:#1e293b;color:#e2e8f0}#path-display{background:#0f172a;color:#e2e8f0;border-bottom-color:#334155}.primary{background:#4A90D9;color:#fff}.primary:hover{background:#3b78c0}.primary:active{background:#2d5fa0}#format-select{background:#0f172a;color:#e2e8f0;border-color:#334155}#dialog.frozen{border-color:#22c55e}}.p-url{color:#1d4ed8}.p-sep{color:#475569}.p-corner{color:#92400e}.p-zindex{color:#6d28d9}.p-ctx_key{color:#047857}.p-ctx_str{color:#065f46}.p-ctx_flag{color:#9f1239}.p-path_tid{color:#991b1b}.p-sep_path{color:#15803d}.p-br_open,.p-br_close{color:#92400e}.p-ctx_open,.p-ctx_close{color:#047857}@media(prefers-color-scheme:dark){.p-url{color:#93c5fd}.p-sep{color:#e2e8f0}.p-corner{color:#fde68a}.p-zindex{color:#ddd6fe}.p-ctx_key{color:#6ee7b7}.p-ctx_str{color:#a7f3d0}.p-ctx_flag{color:#fecdd3}.p-path_tid{color:#fca5a5}.p-sep_path{color:#86efac}.p-br_open,.p-br_close{color:#fde68a}.p-ctx_open,.p-ctx_close{color:#6ee7b7}.nav-btn{display:none;padding:5px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;color:#1e293b;font-size:12px;cursor:pointer;transition:all .15s}.nav-btn:hover{background:#f1f5f9;border-color:#cbd5e1}.nav-btn:disabled{opacity:.4;cursor:not-allowed}#configBtn{display:inline-flex;align-items:center;justify-content:center;min-width:32px;}#copyIdBtn{padding:7px 12px;border:1px solid #1E3A5F;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#1E3A5F;transition:background .15s;white-space:nowrap}#copyIdBtn:hover{background:#f1f5f9}#copyIdBtn:disabled{opacity:.4;cursor:not-allowed}#copyIdBtn.copied{background:#22c55e;color:#fff;border-color:#22c55e}@media(prefers-color-scheme:dark){#copyIdBtn{background:#0f172a;color:#e2e8f0;border-color:#334155}#copyIdBtn:hover{background:#1e293b}}#config-panel .preset-btn{font-size:11px;padding:3px 8px;border:1px solid #334155;border-radius:999px;background:#1e293b;color:#e2e8f0;cursor:pointer}#config-panel .preset-btn:hover{background:#334155} #config-checks label{color:#e2e8f0} #config-checks input{accent-color:#38bdf8}</style><svg id="overlay" xmlns="http://www.w3.org/2000/svg"><path id="ocean" fill="rgba(0,0,0,0.4)" fill-rule="evenodd" d=""/><path id="island" fill="rgba(255,215,0,0.2)" stroke="#FFD700" stroke-width="2" d=""/></svg><div id="dialog"><div id="dialog-header"><span>Element picker</span><span id="el-info"></span><button id="quitBtn" title="Quit">&times;</button></div><div id="path-display">Hover over an element...</div><div id="dialog-actions"><button id="stepBackBtn" class="nav-btn" title="Step Back">To Child</button><button id="stepNextBtn" class="nav-btn" title="Step Next">To Parent</button><select id="format-select"><option value="context">Context</option><option value="xpath">XPath</option><option value="css">CSS</option><option value="pw">Playwright</option></select><button id="configBtn" class="nav-btn" title="Pick computed style props">⚙</button><button id="copyIdBtn" title="Copy only the selected element id" disabled>Copy Selected id</button><button id="copyBtn" class="primary">Copy path</button></div><div id="config-panel" style="display:none;padding:12px 14px;background:#0f172a;border-top:1px solid #1e293b;max-height:240px;overflow-y:auto;color:#e2e8f0;"><div style="font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;color:#f1f5f9;">Computed props <span id="config-close" style="cursor:pointer;font-size:18px;line-height:1;color:#94a3b8;">×</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="preset-btn" data-preset="color">color only</button><button class="preset-btn" data-preset="essentials">essentials</button><button class="preset-btn" data-preset="typography">typography</button><button class="preset-btn" data-preset="box">box</button><button class="preset-btn" data-preset="all">all</button><button class="preset-btn" data-preset="clear">clear</button></div><div id="config-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;margin-bottom:8px;color:#e2e8f0;"></div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">Custom (comma-separated, overrides checks if non-empty):</div><textarea id="config-custom" rows="2" style="width:100%;font:11px monospace;padding:6px;border:1px solid #334155;border-radius:4px;resize:vertical;background:#1e293b;color:#e2e8f0;" placeholder="e.g. color, background-color, font-size"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;"><button id="config-cancel" class="nav-btn">Cancel</button><button id="config-save" class="primary" style="padding:5px 12px;font-size:12px;">Save</button></div><div style="font-size:10px;color:#64748b;margin-top:6px;">Saved in localStorage, used for computed="..."</div></div><div id="freeze-hint" style="padding:6px 14px;font-size:11px;color:#64748b;text-align:center;border-top:1px solid #e2e8f0;">Right-click to freeze • ⚙ to pick computed props</div></div>';
+  tpl.innerHTML = '<style>*,*::before,*::after{box-sizing:border-box}#overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;cursor:crosshair;pointer-events:auto}#dialog{position:fixed;bottom:20px;right:20px;min-width:190px;max-width:420px;background:#fff;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.25),0 1px 4px rgba(0,0,0,.1);overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:13px;color:#1e293b;pointer-events:auto;z-index:1;transition:width .12s ease}#dialog.closing{animation:ctp-fadeOut .25s ease forwards}#dialog-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#1E3A5F;color:#FFD700;font-weight:600;font-size:13px;cursor:move;user-select:none;white-space:nowrap}#el-info{font-size:11px;font-weight:400;opacity:.85;overflow:hidden;text-overflow:ellipsis;margin:0 8px;flex:1;text-align:center;white-space:nowrap}#quitBtn{background:none;border:none;color:#FFD700;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;opacity:.7;flex-shrink:0}#quitBtn:hover{opacity:1}#path-display{padding:12px 14px;font-family:SF Mono,Cascadia Code,Fira Code,Menlo,Consolas,monospace;font-size:12px;color:#1e293b;background:#f8fafc;border-bottom:1px solid #e2e8f0;word-break:break-all;line-height:1.5;min-height:40px;max-height:120px;overflow-y:auto;white-space:pre-wrap}#dialog-actions{padding:10px 14px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;align-items:center}.primary{padding:7px 18px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#1E3A5F;color:#FFD700;transition:background .15s}.primary:hover{background:#2a5070}.primary:active{background:#16304a}.primary.copied{background:#22c55e}#format-select{font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;color:#1e293b;font-family:inherit;cursor:pointer;outline:none}#overlay.frozen{cursor:default}#dialog.frozen{border:2px solid #22c55e}@media(prefers-color-scheme:dark){#dialog{background:#1e293b;color:#e2e8f0}#path-display{background:#0f172a;color:#e2e8f0;border-bottom-color:#334155}.primary{background:#4A90D9;color:#fff}.primary:hover{background:#3b78c0}.primary:active{background:#2d5fa0}#format-select{background:#0f172a;color:#e2e8f0;border-color:#334155}#dialog.frozen{border-color:#22c55e}}.p-url{color:#1d4ed8}.p-sep{color:#475569}.p-corner{color:#92400e}.p-zindex{color:#6d28d9}.p-ctx_key{color:#047857}.p-ctx_str{color:#065f46}.p-ctx_flag{color:#9f1239}.p-path_tid{color:#991b1b}.p-sep_path{color:#15803d}.p-br_open,.p-br_close{color:#92400e}.p-ctx_open,.p-ctx_close{color:#047857}@media(prefers-color-scheme:dark){.p-url{color:#93c5fd}.p-sep{color:#e2e8f0}.p-corner{color:#fde68a}.p-zindex{color:#ddd6fe}.p-ctx_key{color:#6ee7b7}.p-ctx_str{color:#a7f3d0}.p-ctx_flag{color:#fecdd3}.p-path_tid{color:#fca5a5}.p-sep_path{color:#86efac}.p-br_open,.p-br_close{color:#fde68a}.p-ctx_open,.p-ctx_close{color:#6ee7b7}.nav-btn{display:none;padding:5px 10px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;color:#1e293b;font-size:12px;cursor:pointer;transition:all .15s}.nav-btn:hover{background:#f1f5f9;border-color:#cbd5e1}.nav-btn:disabled{opacity:.4;cursor:not-allowed}#stepBackBtn,#stepNextBtn{display:inline-block}#configBtn{display:inline-flex;align-items:center;justify-content:center;min-width:32px;}#copyIdBtn{padding:7px 12px;border:1px solid #1E3A5F;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:#1E3A5F;transition:background .15s;white-space:nowrap}#copyIdBtn:hover{background:#f1f5f9}#copyIdBtn:disabled{opacity:.4;cursor:not-allowed}#copyIdBtn.copied{background:#22c55e;color:#fff;border-color:#22c55e}@media(prefers-color-scheme:dark){#copyIdBtn{background:#0f172a;color:#e2e8f0;border-color:#334155}#copyIdBtn:hover{background:#1e293b}}#config-panel .preset-btn{font-size:11px;padding:3px 8px;border:1px solid #334155;border-radius:999px;background:#1e293b;color:#e2e8f0;cursor:pointer}#config-panel .preset-btn:hover{background:#334155} #config-checks label{color:#e2e8f0} #config-checks input{accent-color:#38bdf8}#multiBtn{margin-left:6px;padding:2px 10px;border:1px solid #FFD700;border-radius:999px;background:transparent;color:#FFD700;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0}#multiBtn:hover{background:rgba(255,215,0,.15)}#multiBtn.active{background:#22c55e;border-color:#22c55e;color:#fff}#queue-list{max-height:120px;overflow-y:auto;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:4px 8px;font-family:SF Mono,Cascadia Code,Fira Code,Menlo,Consolas,monospace;font-size:11px;display:none}#queue-list.has-items{display:block}.q-row{display:flex;align-items:center;gap:6px;padding:3px 4px;border-radius:4px}.q-row:hover{background:#eef2ff}.q-num{font-weight:700;color:#1E3A5F;min-width:20px}.q-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1e293b}.q-remove{border:none;background:none;color:#dc2626;font-size:14px;cursor:pointer;padding:0 4px;line-height:1}.q-remove:hover{font-weight:700}#multi-actions{display:none;padding:8px 14px;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid #e2e8f0;font-size:12px}#multi-actions.open{display:flex}#queue-count{font-weight:600;color:#1E3A5F}#sep-select{font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:4px;background:#fff;color:#1e293b;font-family:inherit;cursor:pointer;outline:none}#copyAllBtn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:#22c55e;color:#fff}#copyAllBtn:hover{background:#16a34a}#copyAllBtn:disabled{opacity:.4;cursor:not-allowed}#clearBtn{padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;cursor:pointer;background:#fff;color:#1e293b}#clearBtn:hover{background:#f1f5f9}.close-toggle{display:flex;align-items:center;gap:4px;font-size:11px;color:#64748b;cursor:pointer;white-space:nowrap}@media(prefers-color-scheme:dark){#queue-list{background:#0f172a;border-bottom-color:#334155}.q-path{color:#e2e8f0}.q-num{color:#FFD700}#multi-actions{border-top-color:#334155}#queue-count{color:#e2e8f0}#sep-select{background:#0f172a;color:#e2e8f0;border-color:#334155}#clearBtn{background:#0f172a;color:#e2e8f0;border-color:#334155}.close-toggle{color:#94a3b8}}</style><svg id="overlay" xmlns="http://www.w3.org/2000/svg"><path id="ocean" fill="rgba(0,0,0,0.4)" fill-rule="evenodd" d=""/><path id="island" fill="rgba(255,215,0,0.2)" stroke="#FFD700" stroke-width="2" d=""/></svg><div id="dialog"><div id="dialog-header"><span>Element picker</span><span id="el-info"></span><button id="multiBtn" title="Toggle multi-pick mode (Add +)">Add +</button><button id="quitBtn" title="Quit">&times;</button></div><div id="path-display">Hover over an element...</div><div id="queue-list"></div><div id="multi-actions"><span id="queue-count">0 picked</span><select id="sep-select" title="Separator style"><option value="newline">newline</option><option value="numbered">numbered</option><option value="comma">comma</option><option value="json">JSON</option></select><button id="copyAllBtn" disabled>Copy All (0)</button><button id="clearBtn">Clear</button><label class="close-toggle"><input type="checkbox" id="closeAfterCopy"> close after copy</label></div><div id="dialog-actions"><button id="stepBackBtn" class="nav-btn" title="Step Back">To Child</button><button id="stepNextBtn" class="nav-btn" title="Step Next">To Parent</button><select id="format-select"><option value="context">Context</option><option value="xpath">XPath</option><option value="css">CSS</option><option value="pw">Playwright</option></select><button id="configBtn" class="nav-btn" title="Pick computed style props">⚙</button><button id="copyIdBtn" title="Copy only the selected element id" disabled>Copy Selected id</button><button id="copyBtn" class="primary">Copy path</button></div><div id="config-panel" style="display:none;padding:12px 14px;background:#0f172a;border-top:1px solid #1e293b;max-height:240px;overflow-y:auto;color:#e2e8f0;"><div style="font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;color:#f1f5f9;">Computed props <span id="config-close" style="cursor:pointer;font-size:18px;line-height:1;color:#94a3b8;">×</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="preset-btn" data-preset="color">color only</button><button class="preset-btn" data-preset="essentials">essentials</button><button class="preset-btn" data-preset="typography">typography</button><button class="preset-btn" data-preset="box">box</button><button class="preset-btn" data-preset="all">all</button><button class="preset-btn" data-preset="clear">clear</button></div><div id="config-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;margin-bottom:8px;color:#e2e8f0;"></div><div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">Custom (comma-separated, overrides checks if non-empty):</div><textarea id="config-custom" rows="2" style="width:100%;font:11px monospace;padding:6px;border:1px solid #334155;border-radius:4px;resize:vertical;background:#1e293b;color:#e2e8f0;" placeholder="e.g. color, background-color, font-size"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;"><button id="config-cancel" class="nav-btn">Cancel</button><button id="config-save" class="primary" style="padding:5px 12px;font-size:12px;">Save</button></div><div style="font-size:10px;color:#64748b;margin-top:6px;">Saved in localStorage, used for computed="..."</div></div><div id="freeze-hint" style="padding:6px 14px;font-size:11px;color:#64748b;text-align:center;border-top:1px solid #e2e8f0;">Right-click to freeze • ⚙ to pick computed props</div></div>';
   shadow.appendChild(tpl.content.cloneNode(true));
 
   document.documentElement.appendChild(host);
@@ -579,11 +592,27 @@
   var stepBackBtn = shadow.querySelector('#stepBackBtn');
   var stepNextBtn = shadow.querySelector('#stepNextBtn');
   var freezeHint = shadow.querySelector('#freeze-hint');
+  var multiBtn = shadow.querySelector('#multiBtn');
+  var queueList = shadow.querySelector('#queue-list');
+  var multiActions = shadow.querySelector('#multi-actions');
+  var queueCount = shadow.querySelector('#queue-count');
+  var sepSelect = shadow.querySelector('#sep-select');
+  var copyAllBtn = shadow.querySelector('#copyAllBtn');
+  var clearBtn = shadow.querySelector('#clearBtn');
+  var closeAfterCopyBox = shadow.querySelector('#closeAfterCopy');
   var formatMode = 'context';
   var frozen = false;
+  // ── Multi-pick state ─────────────────────────────────────────────
+  var collected = [];
+  var multiMode = true;
+  var SEP_KEY = 'ctp-lite-sep-style';
+  var sepStyle = 'newline';
+  try { var _s = localStorage.getItem(SEP_KEY); if (_s) sepStyle = _s; } catch (e) {}
+  var closeAfterCopy = false;
   formatSelect.addEventListener('change', function() {
     formatMode = this.value;
     if (currentEl) renderPathDisplay(currentEl, getZ(currentEl));
+    renderQueue();
   });
 
   // ── Computed props config (localStorage) ──────────────────────────
@@ -850,6 +879,170 @@
     }
   }
 
+  // ── Multi-pick queue ───────────────────────────────────────────
+  function truncatePath(p) {
+    return p.length > 80 ? p.slice(0, 77) + '...' : p;
+  }
+
+  function setMultiMode(on) {
+    multiMode = on;
+    if (multiBtn) multiBtn.classList.toggle('active', on);
+    if (multiActions) multiActions.classList.toggle('open', on);
+    if (!on) { /* keep collected so user can toggle back; badges stay */ }
+    showToast(on ? 'Multi-pick ON — click elements to add' : 'Multi-pick OFF');
+  }
+
+  function addBadge(item) {
+    var rect;
+    try { rect = item.el.getBoundingClientRect(); } catch (e) { return; }
+    var b = document.createElement('div');
+    b.textContent = String(item.n);
+    b.style.cssText = 'position:fixed;z-index:2147483647;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#FFD700;color:#1E3A5F;font:700 12px/20px -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,0.3);';
+    positionBadge(b, rect);
+    document.body.appendChild(b);
+    item.badgeEl = b;
+    if (!item.origOutline) item.origOutline = item.el.style.outline;
+    try { item.el.style.outline = '2px dashed rgba(255,180,0,0.7)'; } catch (e) {}
+  }
+
+  function positionBadge(b, rect) {
+    b.style.left = Math.max(2, rect.left) + 'px';
+    b.style.top = Math.max(2, rect.top - 24) + 'px';
+  }
+
+  function repositionBadges() {
+    for (var i = 0; i < collected.length; i++) {
+      var item = collected[i];
+      if (!item.badgeEl) continue;
+      try {
+        var r = item.el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0 && item.el.isConnected === false) continue;
+        positionBadge(item.badgeEl, r);
+      } catch (e) {}
+    }
+  }
+
+  function removeBadge(item) {
+    if (item.badgeEl) { try { item.badgeEl.remove(); } catch (e) {} item.badgeEl = null; }
+    try { item.el.style.outline = item.origOutline || ''; } catch (e) {}
+  }
+
+  function renumberBadges() {
+    for (var i = 0; i < collected.length; i++) {
+      collected[i].n = i + 1;
+      if (collected[i].badgeEl) collected[i].badgeEl.textContent = String(i + 1);
+    }
+  }
+
+  function renderQueue() {
+    if (!queueList) return;
+    queueList.textContent = '';
+    if (!collected.length) {
+      queueList.classList.remove('has-items');
+    } else {
+      queueList.classList.add('has-items');
+    }
+    for (var i = 0; i < collected.length; i++) {
+      (function (item) {
+        var row = document.createElement('div');
+        row.className = 'q-row';
+        var num = document.createElement('span');
+        num.className = 'q-num';
+        num.textContent = item.n + '.';
+        var p = document.createElement('span');
+        p.className = 'q-path';
+        var full;
+        try { full = getSelectorPath(item.el, formatMode); } catch (e) { full = '(detached)'; }
+        p.textContent = truncatePath(full);
+        p.title = full;
+        var x = document.createElement('button');
+        x.className = 'q-remove';
+        x.textContent = '\u00d7';
+        x.title = 'Remove #' + item.n;
+        x.addEventListener('click', function (e) { e.stopPropagation(); removeItem(item.el); });
+        row.appendChild(num);
+        row.appendChild(p);
+        row.appendChild(x);
+        queueList.appendChild(row);
+      })(collected[i]);
+    }
+    if (queueCount) queueCount.textContent = collected.length + ' picked';
+    if (copyAllBtn) {
+      copyAllBtn.textContent = 'Copy All (' + collected.length + ')';
+      copyAllBtn.disabled = collected.length === 0;
+    }
+    if (sepSelect && sepSelect.value !== sepStyle) sepSelect.value = sepStyle;
+  }
+
+  function addItem(el) {
+    if (!el || el === document.body || el === document.documentElement) return;
+    for (var i = 0; i < collected.length; i++) {
+      if (collected[i].el === el) {
+        showToast('Already added #' + collected[i].n, true);
+        if (queueList) { queueList.style.animation = 'none'; queueList.offsetHeight; queueList.style.animation = 'ctp-shake 0.4s ease'; }
+        return;
+      }
+    }
+    var item = { n: collected.length + 1, el: el, origOutline: '', badgeEl: null };
+    collected.push(item);
+    addBadge(item);
+    renderQueue();
+    showToast('Added #' + item.n);
+  }
+
+  function removeItem(el) {
+    for (var i = 0; i < collected.length; i++) {
+      if (collected[i].el === el) {
+        removeBadge(collected[i]);
+        collected.splice(i, 1);
+        break;
+      }
+    }
+    renumberBadges();
+    renderQueue();
+  }
+
+  function clearQueue() {
+    for (var i = 0; i < collected.length; i++) removeBadge(collected[i]);
+    collected = [];
+    renderQueue();
+    showToast('Queue cleared');
+  }
+
+  function buildMultiOutput() {
+    var paths = collected.map(function (item) {
+      try { return getSelectorPath(item.el, formatMode); } catch (e) { return '(detached)'; }
+    });
+    if (sepStyle === 'numbered') {
+      return paths.map(function (p, i) { return (i + 1) + '. ' + p; }).join('\n');
+    }
+    if (sepStyle === 'comma') return paths.join(', ');
+    if (sepStyle === 'json') {
+      return JSON.stringify(paths.map(function (p, i) { return { n: i + 1, path: p }; }));
+    }
+    return paths.join('\n');
+  }
+
+  function doCopyAll() {
+    if (!collected.length) { showToast('Nothing picked', true); return; }
+    var text = buildMultiOutput();
+    console.log('[copy-ui-path-lite] COPIED MULTI (' + collected.length + ', ' + sepStyle + '):');
+    console.log('[copy-ui-path-lite]', text);
+    // Stay-open by default: never hide the picker unless closeAfterCopy is on.
+    // (hidePicker sets host display:none, which would strand badges + dialog.)
+    if (closeAfterCopy) hidePicker();
+    copyToClipboard(text).then(function () {
+      showToast('Copied ' + collected.length + ' paths (' + sepStyle + ')');
+      if (copyAllBtn) copyAllBtn.textContent = 'Copied!';
+      setTimeout(renderQueue, 1200);
+      if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
+    }).catch(function () {
+      showToast('Clipboard failed', true);
+      if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
+      else if (copyAllBtn) setTimeout(renderQueue, 1200);
+    });
+  }
+
   function doCopy(stayOpen) {
     if (!currentPath) return;
     var zVal = getZ(currentEl);
@@ -912,6 +1105,8 @@
     savedPath = [];
     pathIndex = -1;
     isNavigating = false;
+    for (var qi = 0; qi < collected.length; qi++) removeBadge(collected[qi]);
+    collected = [];
     overlay.removeEventListener('mousemove', onMouseMove);
     overlay.removeEventListener('click', onOverlayClick);
     overlay.removeEventListener('contextmenu', onRightClick);
@@ -919,6 +1114,8 @@
     document.removeEventListener('mousemove', onDragMove);
     document.removeEventListener('mouseup', onDragEnd);
     document.removeEventListener('keydown', onKeyDown, true);
+    window.removeEventListener('scroll', repositionBadges, true);
+    window.removeEventListener('resize', repositionBadges);
     injectedStyle.remove();
     hlEl.remove();
     cornerTl.remove();
@@ -952,8 +1149,6 @@
       frozen = false;
       dialog.classList.remove('frozen');
       overlay.classList.remove('frozen');
-      stepBackBtn.style.display = 'none';
-      stepNextBtn.style.display = 'none';
       freezeHint.style.display = 'block';
       showToast('Resumed hovering');
       return;
@@ -961,6 +1156,7 @@
     var el = elFromPoint(e.clientX, e.clientY);
     if (el) {
       updateUI(el);
+      if (multiMode) { addItem(el); return; }
       doCopy(e.ctrlKey);
     }
   }
@@ -972,8 +1168,6 @@
     frozen = true;
     dialog.classList.add('frozen');
     overlay.classList.add('frozen');
-    stepBackBtn.style.display = 'inline-block';
-    stepNextBtn.style.display = 'inline-block';
     freezeHint.style.display = 'none';
     showToast('Frozen — left click to unfreeze');
     var el = elFromPoint(e.clientX, e.clientY);
@@ -992,7 +1186,7 @@
   }
 
   function onDragStart(e) {
-    if (e.target === quitBtn) return;
+    if (e.target === quitBtn || (multiBtn && e.target === multiBtn)) return;
     dragging = true;
     var rect = dialog.getBoundingClientRect();
     dragOffsetX = e.clientX - rect.left;
@@ -1021,6 +1215,35 @@
   quitBtn.addEventListener('click', quit);
   stepBackBtn.addEventListener('click', stepBack);
   stepNextBtn.addEventListener('click', stepNext);
+  if (multiBtn) multiBtn.addEventListener('click', function (e) { e.stopPropagation(); setMultiMode(!multiMode); });
+  if (sepSelect) {
+    try { sepSelect.value = sepStyle; } catch (e) {}
+    sepSelect.addEventListener('change', function () {
+      sepStyle = this.value;
+      try { localStorage.setItem(SEP_KEY, sepStyle); } catch (e) {}
+      renderQueue();
+    });
+  }
+  if (copyAllBtn) copyAllBtn.addEventListener('click', doCopyAll);
+  if (clearBtn) clearBtn.addEventListener('click', clearQueue);
+  if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () { closeAfterCopy = this.checked; });
+  window.addEventListener('scroll', repositionBadges, true);
+  window.addEventListener('resize', repositionBadges);
+  if (multiBtn) multiBtn.classList.toggle('active', multiMode);
+  if (multiActions) multiActions.classList.toggle('open', multiMode);
+  renderQueue();
+  window.__ctp_multi = {
+    get: function () { return collected.map(function (it) { return it.el; }); },
+    mode: function () { return multiMode; },
+    setMode: setMultiMode,
+    add: addItem,
+    remove: removeItem,
+    clear: clearQueue,
+    output: buildMultiOutput,
+    copyAll: doCopyAll,
+    setSep: function (s) { sepStyle = s; renderQueue(); },
+    setFormat: function (m) { formatMode = m; if (currentEl) renderPathDisplay(currentEl, getZ(currentEl)); renderQueue(); }
+  };
   overlay.addEventListener('mousemove', onMouseMove);
   overlay.addEventListener('click', onOverlayClick);
   overlay.addEventListener('contextmenu', onRightClick);
