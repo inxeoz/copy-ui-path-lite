@@ -3,6 +3,10 @@
 Source for the Firefox build. See the [project README](../README.md) for install,
 usage, and build instructions.
 
+> `picker.js` here is **generated** — backend lives in `../src/picker.core.js`,
+> UI in `../templates/picker_ui.j2` + `../themes/*.json`. Rebuild with `make ui`
+> from the project root; never edit `picker.js` directly.
+
 ## web-ext
 
 ```bash

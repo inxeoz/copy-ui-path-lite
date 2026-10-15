@@ -20,12 +20,28 @@ CHROMIUM_VERSION := $(shell python3 -c "import json;print(json.load(open('$(CHRO
 
 ZIP_EXCLUDES := -x "*.git*" -x "*.DS_Store" -x "*.md"
 
-.PHONY: all build check-versions sync firefox chromium chrome clean lint run-firefox version help
+.PHONY: all build check-versions ui ui-check themes sync firefox chromium chrome clean lint run-firefox version help
 
 all: build
 
-## build both packages
-build: check-versions firefox chromium
+## build both packages (renders the UI template first)
+build: check-versions ui firefox chromium
+
+THEME ?= $(shell cat themes/default.txt 2>/dev/null || echo carbon)
+
+## ui — render templates/picker_ui.j2 + themes/$(THEME).json into firefox/picker.js
+ui:
+	@python3 tools/build_ui.py --theme $(THEME)
+
+## ui-check — fail if firefox/picker.js is not the current render of the template
+ui-check:
+	@python3 tools/build_ui.py --theme $(THEME) --check
+
+## themes — list available UI themes
+themes:
+	@echo "available themes (use: make ui THEME=<name>):"
+	@for f in themes/*.json; do printf "  %-10s %s\n" "$$(basename $$f .json)" "$$(python3 -c "import json,sys;print(json.load(open('$$f'))['label'])" 2>/dev/null)"; done
+	@echo "current default: $(THEME)"
 
 ## check-versions — both manifests must carry the same version (firefox/ is the source of truth)
 check-versions:

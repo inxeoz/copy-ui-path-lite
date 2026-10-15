@@ -1,0 +1,67 @@
+<style>
+*,*::before,*::after{box-sizing:border-box}
+#overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;cursor:crosshair;pointer-events:auto}
+#dialog{position:fixed;bottom:20px;right:20px;width:{{ t.sidebar_w | default('150px') | replace('px','') | int + 320 }}px;min-width:320px;max-width:560px;background:{{ t.dialog_bg }};border:1px solid {{ t.dialog_border }};border-radius:{{ t.dialog_radius }};box-shadow:{{ t.dialog_shadow }};overflow:hidden;font-family:{{ t.font_ui }};font-size:13px;color:{{ t.ink }};pointer-events:auto;z-index:1}
+#dialog.closing{animation:ctp-fadeOut .25s ease forwards}
+#dialog-header{display:flex;align-items:center;gap:8px;padding:9px 12px;background:{{ t.header_bg }};color:{{ t.header_ink }};font-weight:700;font-size:13px;cursor:move;user-select:none;white-space:nowrap}
+#el-info{font-size:11px;font-weight:400;opacity:.75;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:right;white-space:nowrap;color:{{ t.header_ink }}}
+#multiBtn{margin-left:2px;padding:2px 11px;border:1px solid {{ t.accent }};border-radius:999px;background:transparent;color:{{ t.accent }};font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit}
+#multiBtn:hover{background:{{ t.accent }}22}
+#multiBtn.active{background:{{ t.accent }};border-color:{{ t.accent }};color:{{ t.accent_ink }}}
+#quitBtn{background:none;border:none;color:{{ t.header_ink }};font-size:20px;cursor:pointer;padding:0 4px;line-height:1;opacity:.7;flex-shrink:0}
+#quitBtn:hover{opacity:1}
+#dialog-body{display:flex;align-items:stretch;min-height:220px}
+#pane-main{flex:1;min-width:0;display:flex;flex-direction:column}
+#path-display{padding:10px 12px;font-family:{{ t.font_mono }};font-size:11.5px;color:{{ t.ink }};background:{{ t.panel }};border-bottom:1px solid {{ t.panel_border }};word-break:break-all;line-height:1.5;max-height:104px;overflow-y:auto;white-space:pre-wrap;min-height:38px}
+#queue-list{display:none;overflow-y:auto;max-height:260px;padding:4px 0 6px;font-family:{{ t.font_mono }};font-size:11px;flex:1}
+#queue-list.has-items{display:block}
+.q-row{display:flex;align-items:center;gap:7px;padding:5px 8px;margin:4px 8px;border-radius:6px;background:{{ t.row_bg }};border:1px solid {{ t.row_border }}}
+.q-row:hover{border-color:{{ t.accent }}}
+.q-num{font-weight:800;color:{{ t.badge_ink }};background:{{ t.badge_bg }};border-radius:4px;padding:0 6px;min-width:20px;text-align:center;flex-shrink:0}
+.q-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{{ t.ink }}}
+.q-remove{border:none;background:none;color:{{ t.err }};font-size:14px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+.q-remove:hover{font-weight:700}
+#pane-side{width:{{ t.sidebar_w }};flex-shrink:0;padding:9px;display:flex;flex-direction:column;gap:7px;border-left:1px solid {{ t.panel_border }};font-family:{{ t.font_mono }};font-size:11px}
+#multi-actions{display:none;flex-direction:column;gap:7px}
+#multi-actions.open{display:flex}
+#queue-count{font-weight:700;color:{{ t.accent }}}
+#sep-select,#format-select{font-family:inherit;font-size:11px;padding:5px 7px;border:1px solid {{ t.input_border }};border-radius:6px;background:{{ t.input_bg }};color:{{ t.ink }};cursor:pointer;outline:none;width:100%}
+#copyAllBtn{padding:7px 10px;border:none;border-radius:7px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;background:{{ t.accent }};color:{{ t.accent_ink }};width:100%}
+#copyAllBtn:hover{background:{{ t.accent_hover }}}
+#copyAllBtn:disabled{opacity:.45;cursor:not-allowed}
+#clearBtn{padding:6px 10px;border:1px solid {{ t.ghost_border }};border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer;background:{{ t.ghost_bg }};color:{{ t.ghost_ink }};width:100%}
+#clearBtn:hover{border-color:{{ t.accent }}}
+.close-toggle{display:flex;align-items:center;gap:5px;font-size:11px;color:{{ t.muted }};cursor:pointer;white-space:nowrap}
+.side-div{border-top:1px solid {{ t.panel_border }};margin:1px 0}
+.nav-btn{padding:6px 10px;border:1px solid {{ t.ghost_border }};border-radius:7px;background:{{ t.ghost_bg }};color:{{ t.ghost_ink }};font-family:inherit;font-size:12px;cursor:pointer;width:100%;transition:border-color .15s}
+.nav-btn:hover{border-color:{{ t.accent }}}
+.nav-btn:disabled{opacity:.4;cursor:not-allowed}
+#copyIdBtn{padding:6px 10px;border:1px solid {{ t.ghost_border }};border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;background:{{ t.ghost_bg }};color:{{ t.ghost_ink }};width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#copyIdBtn:hover{border-color:{{ t.accent }}}
+#copyIdBtn:disabled{opacity:.4;cursor:not-allowed}
+#copyIdBtn.copied{background:{{ t.ok }};color:{{ t.accent_ink }};border-color:{{ t.ok }}}
+.primary{padding:8px 10px;border:none;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:{{ t.accent }};color:{{ t.accent_ink }};width:100%;transition:background .15s}
+.primary:hover{background:{{ t.accent_hover }}}
+.primary:active{background:{{ t.accent }}}
+.primary.copied{background:{{ t.ok }};color:#fff}
+#overlay.frozen{cursor:default}
+#dialog.frozen{border-color:{{ t.ok }}}
+#config-panel{display:none;padding:10px 12px;background:{{ t.panel }};border-top:1px solid {{ t.panel_border }};max-height:250px;overflow-y:auto;color:{{ t.ink }};font-family:{{ t.font_ui }}}
+.preset-btn{font-size:11px;padding:3px 9px;border:1px solid {{ t.ghost_border }};border-radius:999px;background:{{ t.ghost_bg }};color:{{ t.ghost_ink }};cursor:pointer;font-family:inherit}
+.preset-btn:hover{border-color:{{ t.accent }}}
+#config-checks label{color:{{ t.ink }};font-size:12px}
+#config-checks input{accent-color:{{ t.accent }}}
+#freeze-hint{padding:6px 12px;font-size:11px;color:{{ t.muted }};text-align:center;border-top:1px solid {{ t.panel_border }};font-family:{{ t.font_mono }}}
+.p-url{color:{{ t.path_colors.url }}}
+.p-sep{color:{{ t.path_colors.sep }}}
+.p-path{color:{{ t.ink }}}
+.p-corner{color:{{ t.path_colors.corner }}}
+.p-zindex{color:{{ t.path_colors.zindex }}}
+.p-ctx_key{color:{{ t.path_colors.ctx_key }}}
+.p-ctx_str{color:{{ t.path_colors.ctx_str }}}
+.p-ctx_flag{color:{{ t.path_colors.ctx_flag }}}
+.p-path_tid{color:{{ t.path_colors.path_tid }}}
+.p-sep_path{color:{{ t.path_colors.sep_path }}}
+.p-br_open,.p-br_close{color:{{ t.path_colors.br_open }}}
+.p-ctx_open,.p-ctx_close{color:{{ t.path_colors.ctx_open }}}
+</style><svg id="overlay" xmlns="http://www.w3.org/2000/svg"><path id="ocean" fill="{{ t.overlay_dim }}" fill-rule="evenodd" d=""/><path id="island" fill="{{ t.island_fill }}" stroke="{{ t.island_stroke }}" stroke-width="2" d=""/></svg><div id="dialog"><div id="dialog-header"><span>{{ t.header_title | default('$ picker') }}</span><span id="el-info"></span><button id="multiBtn" title="Toggle multi-pick mode (Add +)">[+ add]</button><button id="quitBtn" title="Quit (Esc)">&times;</button></div><div id="dialog-body"><div id="pane-main"><div id="path-display">Hover over an element...</div><div id="queue-list"></div></div><div id="pane-side"><div id="multi-actions"><span id="queue-count">0 picked</span><select id="sep-select" title="Separator style"><option value="newline">newline</option><option value="numbered">numbered</option><option value="comma">comma</option><option value="json">JSON</option></select><button id="copyAllBtn" disabled>Copy All (0)</button><button id="clearBtn">Clear</button><label class="close-toggle"><input type="checkbox" id="closeAfterCopy"> close after copy</label></div><div class="side-div"></div><button id="stepBackBtn" class="nav-btn" title="Step to child">To Child</button><button id="stepNextBtn" class="nav-btn" title="Step to parent">To Parent</button><select id="format-select"><option value="context">Context</option><option value="xpath">XPath</option><option value="css">CSS</option><option value="pw">Playwright</option></select><button id="configBtn" class="nav-btn" title="Pick computed style props">⚙ style</button><button id="copyIdBtn" title="Copy only the selected element id" disabled>Copy Selected id</button><button id="copyBtn" class="primary">Copy path</button></div></div><div id="config-panel"><div style="font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">Computed props <span id="config-close" style="cursor:pointer;font-size:18px;line-height:1;color:{{ t.muted }};">&times;</span></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button class="preset-btn" data-preset="color">color only</button><button class="preset-btn" data-preset="essentials">essentials</button><button class="preset-btn" data-preset="typography">typography</button><button class="preset-btn" data-preset="box">box</button><button class="preset-btn" data-preset="all">all</button><button class="preset-btn" data-preset="clear">clear</button></div><div id="config-checks" style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;margin-bottom:8px;"></div><div style="font-size:11px;color:{{ t.muted }};margin-bottom:4px;">Custom (comma-separated, overrides checks if non-empty):</div><textarea id="config-custom" rows="2" style="width:100%;font:11px {{ t.font_mono }};padding:6px;border:1px solid {{ t.input_border }};border-radius:6px;resize:vertical;background:{{ t.input_bg }};color:{{ t.ink }};" placeholder="e.g. color, background-color, font-size"></textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;"><button id="config-cancel" class="nav-btn" style="width:auto;padding:5px 12px;">Cancel</button><button id="config-save" class="primary" style="width:auto;padding:5px 12px;font-size:12px;">Save</button></div><div style="font-size:10px;color:{{ t.faint }};margin-top:6px;">Saved in localStorage, used for computed="..."</div></div><div id="freeze-hint">right-click: freeze • ⚙: computed props</div></div>
