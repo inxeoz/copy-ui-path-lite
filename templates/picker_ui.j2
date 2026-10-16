@@ -40,8 +40,8 @@
   .box .copy { flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--accent); color: {{ t.accent_ink }}; font-weight: 700; font-size: 12px; cursor: pointer; }
   .box .copy:hover { background: {{ t.accent_hover }}; }
   #addBtn { font-size: 18px; font-weight: 700; line-height: 1; }
-  #addBtn:disabled { opacity: .35; cursor: not-allowed; }
-  #addBtn:disabled:hover { background: rgba(255, 255, 255, .55); }
+  .box button:disabled { opacity: .4; cursor: not-allowed; }
+  .box button:disabled:hover { background: rgba(255, 255, 255, .55); }
 
   /* ── settings ────────────────────────────────────────────────── */
   /* The panel floats above the bar. A fixed auto-height box keeps its top edge
@@ -153,7 +153,8 @@
       <div class="row"><span>Separator</span><select id="sep-select"><option value="newline">newline</option><option value="numbered">numbered</option><option value="comma">comma</option><option value="json">JSON</option></select></div>
       <div class="row"><label><input type="checkbox" id="closeAfterCopy"> close after copy</label></div>
       <div class="side-div"></div>
-      <div class="row"><label><input type="checkbox" id="opt-nav" checked> show to child/parent</label></div>
+      <div class="row"><label><input type="checkbox" id="opt-child" checked> to child</label></div>
+      <div class="row"><label><input type="checkbox" id="opt-parent" checked> to parent</label></div>
       <div class="row"><label><input type="checkbox" id="opt-move" checked> show move</label></div>
       <div class="row"><label><input type="checkbox" id="opt-settings" checked> show settings</label></div>
       <div class="row"><label><input type="checkbox" id="opt-info" checked> show element info</label></div>

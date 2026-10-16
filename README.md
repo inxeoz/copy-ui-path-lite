@@ -78,8 +78,8 @@ Edit `templates/picker_ui.j2`. The backend binds to the UI by **element id** and
   `settingsPanel`, `saveState`, `path-display`, `queue-list`, `queue-count`,
   `sep-select`, `format-select`, `copyAllBtn`, `clearBtn`, `copyIdBtn`, `copyBtn`,
   `addBtn`, `closeAfterCopy`, `multiBtn`, `quitBtn`, `stepBackBtn`, `stepNextBtn`,
-  `configBtn`, `config-checks`, `config-custom`, `opt-nav`, `opt-move`,
-  `opt-settings`, `opt-info`
+  `configBtn`, `config-checks`, `config-custom`, `opt-child`, `opt-parent`,
+  `opt-move`, `opt-settings`, `opt-info`
 - classes: `tab` + `data-tab` on the tab buttons, `panel` + `data-panel` on the panels,
   `active` (`#multiBtn`, settings tabs), `open` (`#dialog`, `.preview-actions`),
   `has-items` (`#queue-list`), `closing`, `frozen` (`#dialog` / `#overlay`), plus the
@@ -132,19 +132,24 @@ organised into three tabs:
 | Tab | What is in it |
 |---|---|
 | **Style** | computed-property presets, the property list, and a custom comma-separated list |
-| **Config** | path format, separator for multiple paths, close-after-copy, and which toolbar controls to show |
+| **Config** | path format, separator for multiple paths, close-after-copy, and which toolbar controls are shown — `to child` and `to parent` are switched independently |
 | **Path Preview** | the live path for the hovered element, the picked-path list, and the copy actions |
 
 Every picked path gets its own row with **Copy**, **Add Details** and **View Path** —
 Copy grabs that single path, Add Details attaches a note describing what the path is
 for (notes are keyed by path text, so they return when you re-pick the same element),
 and View Path expands the row to show the path in full. Once a second path is picked
-the toolbar's primary button switches from **Copy Path** to **Copy All Path**.
+the toolbar's primary button switches from **Copy path** to **Copy** (its tooltip names
+the real action — *Copy all 2 picked paths*).
 
-The **+** button adds whatever is under the pointer to the picked list. It is the
-counterpart to left-clicking in multi-pick mode, and the reason it exists is that
-**freeze** changes what left-click does — while frozen, left-clicking unfreezes instead
-of adding, so **+** is how you keep building the list. It stays enabled while frozen.
+The **+** button adds to the picked list. Normally it adds whatever is under the pointer
+— the pointer-based equivalent of left-clicking in multi-pick mode.
+
+While **frozen** it behaves differently, and this is the case it exists for: left-clicking
+to unfreeze is the normal gesture, so **+** adds the **frozen element itself** (not
+whatever the pointer has since drifted onto) and then unfreezes. So freeze → `+` →
+move → freeze → `+` is the loop for collecting a set of paths from a page you need to
+walk without a steady hand on the pointer.
 
 Everything saves itself as you change it — there is no Save button. Changes are written to
 `localStorage` under `ctp-lite-settings` (styles), `ctp-lite-notes` (path details), and

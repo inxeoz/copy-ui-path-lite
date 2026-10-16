@@ -752,30 +752,35 @@
     tab.addEventListener('click', function(){ showTab(tab.getAttribute('data-tab')); });
   });
 
-  // ── Toolbar visibility toggles ──────────────────────────────────
+  // ── Toolbar toggles ─────────────────────────────────────────────
+  // A checked box shows the control; unchecking removes it from the bar.
   var TOOLBAR_TARGETS = {
-    'opt-nav': ['#stepBackBtn', '#stepNextBtn'],
-    'opt-move': ['#multiBtn'],
-    'opt-settings': ['#configBtn'],
-    'opt-info': ['#el-info']
+    'opt-child': '#stepBackBtn',
+    'opt-parent': '#stepNextBtn',
+    'opt-move': '#multiBtn',
+    'opt-settings': '#configBtn',
+    'opt-info': '#el-info'
   };
-  Object.keys(TOOLBAR_TARGETS).forEach(function(id){
+  function applyToolbarToggle(id) {
+    var sel = TOOLBAR_TARGETS[id];
+    if (!sel) return;
+    var box = shadow.querySelector('#' + id);
+    var el = shadow.querySelector(sel);
+    if (box && el) el.style.display = box.checked ? '' : 'none';
+  }
+  Object.keys(TOOLBAR_TARGETS).forEach(function (id) {
     var box = shadow.querySelector('#' + id);
     if (!box) return;
     var key = id.replace('opt-', '');
+    // builds before the split stored one toggle for both walk buttons
+    if (settings[key] === undefined && settings.nav !== undefined) settings[key] = !!settings.nav;
     if (settings[key] !== undefined) box.checked = !!settings[key];
-    box.addEventListener('change', function(){
+    box.addEventListener('change', function () {
       settings[key] = box.checked;
-      TOOLBAR_TARGETS[id].forEach(function(sel){
-        var el = shadow.querySelector(sel);
-        if (el) el.style.display = box.checked ? '' : 'none';
-      });
+      applyToolbarToggle(id);
       autoSave();
     });
-    TOOLBAR_TARGETS[id].forEach(function(sel){
-      var el = shadow.querySelector(sel);
-      if (el && !box.checked) el.style.display = 'none';
-    });
+    applyToolbarToggle(id);
   });
 
 
@@ -1043,11 +1048,10 @@
   }
   // The ``+`` button mirrors what left-click does in multi-pick mode, so it also
   // works while the picker is frozen (when left-clicking only unfreezes).
-  // While frozen the live hover tracking is paused, so currentEl can be stale —
-  // resolve what is under the pointer right now instead.
+  // `currentEl` is the frozen element while frozen (onRightClick sets it), so
+  // `+` must add that — not whatever the pointer has since drifted onto.
   function addTarget() {
-    if (!frozen) return currentEl;
-    try { return elFromPoint(lastX, lastY) || currentEl; } catch (e) { return currentEl; }
+    return currentEl;
   }
   function canAdd() {
     var el = addTarget();
@@ -1165,8 +1169,15 @@
     }
     // The toolbar's primary action follows the queue: one path copies what the
     // pointer is on, several paths copy the whole set.
-    if (copyBtn) copyBtn.textContent = collected.length > 1 ? 'Copy All Path' : 'Copy path';
+    updateCopyBtn();
     if (sepSelect && sepSelect.value !== sepStyle) sepSelect.value = sepStyle;
+  }
+
+  function updateCopyBtn() {
+    if (!copyBtn) return;
+    var many = collected.length > 1;
+    copyBtn.textContent = many ? 'Copy' : 'Copy path';
+    copyBtn.title = many ? 'Copy all ' + collected.length + ' picked paths' : 'Copy path';
   }
 
   function addItem(el) {
@@ -1263,7 +1274,7 @@
       showToast('Copied ' + formatMode + ': ' + preview + '  [' + pct + '%]');
       if (stayOpen) {
         setTimeout(function () {
-          copyBtn.textContent = collected.length > 1 ? 'Copy All Path' : 'Copy path';
+          updateCopyBtn();
           copyBtn.classList.remove('copied');
         }, 1200);
       } else {
@@ -1332,10 +1343,7 @@
   function onMouseMove(e) {
     lastX = e.clientX;
     lastY = e.clientY;
-    if (dragging || frozen || isNavigating) {
-      updateAddBtn();
-      return;
-    }
+    if (dragging || frozen || isNavigating) return;
     if (rafPending) return;
     rafPending = true;
     requestAnimationFrame(function () {
@@ -1347,17 +1355,18 @@
     });
   }
 
+  function unfreeze() {
+    if (!frozen) return;
+    frozen = false;
+    dialog.classList.remove('frozen');
+    overlay.classList.remove('frozen');
+    showToast('Resumed hovering');
+  }
   function onOverlayClick(e) {
     if (dragging) return;
     e.preventDefault();
     e.stopPropagation();
-    if (frozen) {
-      frozen = false;
-      dialog.classList.remove('frozen');
-      overlay.classList.remove('frozen');
-      showToast('Resumed hovering');
-      return;
-    }
+    if (frozen) { unfreeze(); return; }
     var el = elFromPoint(e.clientX, e.clientY);
     if (el) {
       updateUI(el);
@@ -1427,7 +1436,11 @@
   stepNextBtn.addEventListener('click', stepNext);
   if (addBtn) addBtn.addEventListener('click', function (e) {
     e.stopPropagation();
+    // While frozen this adds the frozen element (currentEl), never whatever the
+    // pointer has drifted onto. Then hand the pointer back so you can pick the
+    // next path instead of having to left-click to unfreeze first.
     addItem(addTarget());
+    if (frozen) { unfreeze(); updateAddBtn(); }
   });
   if (multiBtn) multiBtn.addEventListener('click', function (e) { e.stopPropagation(); setMultiMode(!multiMode); });
   if (sepSelect) {
@@ -1451,6 +1464,7 @@
   if (multiActions) multiActions.classList.toggle('open', multiMode);
   renderQueue();
   updateAddBtn();
+  updateCopyBtn();
   window.__ctp_multi = {
     get: function () { return collected.map(function (it) { return it.el; }); },
     mode: function () { return multiMode; },
