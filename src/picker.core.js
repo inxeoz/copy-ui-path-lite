@@ -594,7 +594,6 @@
   var quitBtn = shadow.querySelector('#quitBtn');
   var stepBackBtn = shadow.querySelector('#stepBackBtn');
   var stepNextBtn = shadow.querySelector('#stepNextBtn');
-  var freezeHint = shadow.querySelector('#freeze-hint');
   var multiBtn = shadow.querySelector('#multiBtn');
   var queueList = shadow.querySelector('#queue-list');
   var multiActions = shadow.querySelector('#multi-actions');
@@ -603,17 +602,42 @@
   var copyAllBtn = shadow.querySelector('#copyAllBtn');
   var clearBtn = shadow.querySelector('#clearBtn');
   var closeAfterCopyBox = shadow.querySelector('#closeAfterCopy');
-  var formatMode = 'context';
+
+  // ── Settings (one localStorage record, debounced auto-save) ───────
+  var SETTINGS_KEY = 'ctp-lite-settings';
+  var settings = {};
+  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch (e) { settings = {}; }
+  if (!settings.sep) {
+    // pre-toolbox builds stored the separator under its own key
+    try { var _oldSep = localStorage.getItem('ctp-lite-sep-style'); if (_oldSep) settings.sep = _oldSep; } catch (e) {}
+  }
+  var saveState = shadow.querySelector('#saveState');
+  var saveTimer = null;
+  function autoSave() {
+    if (!saveState) return;
+    saveState.textContent = 'Saving…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+      saveState.textContent = 'Saved ✓';
+    }, 350);
+  }
+
   var frozen = false;
   // ── Multi-pick state ─────────────────────────────────────────────
   var collected = [];
   var multiMode = true;
-  var SEP_KEY = 'ctp-lite-sep-style';
-  var sepStyle = 'newline';
-  try { var _s = localStorage.getItem(SEP_KEY); if (_s) sepStyle = _s; } catch (e) {}
-  var closeAfterCopy = false;
+  var sepStyle = settings.sep || 'newline';
+  var closeAfterCopy = !!settings.closeAfterCopy;
+  var formatMode = settings.format || 'context';
+  try { formatSelect.value = formatMode; } catch (e) {}
+  try { sepSelect.value = sepStyle; } catch (e) {}
+  if (closeAfterCopyBox) closeAfterCopyBox.checked = closeAfterCopy;
+
   formatSelect.addEventListener('change', function() {
     formatMode = this.value;
+    settings.format = formatMode;
+    autoSave();
     if (currentEl) renderPathDisplay(currentEl, getZ(currentEl));
     renderQueue();
   });
@@ -646,10 +670,7 @@
   var cfgProps = loadCfg();
 
   var configBtn = shadow.querySelector('#configBtn');
-  var configPanel = shadow.querySelector('#config-panel');
-  var configClose = shadow.querySelector('#config-close');
-  var configCancel = shadow.querySelector('#config-cancel');
-  var configSave = shadow.querySelector('#config-save');
+  var settingsPanel = shadow.querySelector('#settingsPanel');
   var configChecks = shadow.querySelector('#config-checks');
   var configCustom = shadow.querySelector('#config-custom');
 
@@ -661,7 +682,6 @@
     var isAll = cfgProps.length===AVAILABLE_PROPS.length || (cfgProps.length===1 && cfgProps[0]==='*');
     AVAILABLE_PROPS.forEach(function(prop){
       var label = document.createElement('label');
-      label.style.cssText='display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;';
       var cb = document.createElement('input');
       cb.type='checkbox'; cb.value=prop;
       cb.checked = isAll ? true : active.indexOf(prop)!==-1;
@@ -672,43 +692,19 @@
     });
     if(!customVal) configCustom.placeholder = cfgProps.join(', ');
   }
-  var cfgSnapshot = null;
-  function openConfig(){
-    cfgSnapshot = cfgProps.slice();
-    configCustom.value = '';
-    renderChecks();
-    configPanel.style.display='block';
-    freezeHint.style.display='none';
-  }
-  function closeConfig(){ configPanel.style.display='none'; freezeHint.style.display='block'; }
-  function cancelConfig(){
-    if(cfgSnapshot) { cfgProps = cfgSnapshot.slice(); try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfgProps)); }catch(e){} }
-    closeConfig();
-    if(currentEl){ var el=currentEl; currentEl=null; updateUI(el); }
-  }
   function collectProps(){
     var custom = configCustom.value.trim();
     if(custom) return custom.split(',').map(function(s){return s.trim()}).filter(Boolean);
     var out=[]; configChecks.querySelectorAll('input:checked').forEach(function(cb){ out.push(cb.value); });
     return out;
   }
+  // Computed props apply live — every edit is persisted, there is no Save button.
   function liveUpdate(){
-    var live = collectProps();
-    cfgProps = live;
-    try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfgProps)); }catch(e){}
+    cfgProps = collectProps();
+    saveCfg(cfgProps);
+    autoSave();
     if(currentEl) { var el=currentEl; currentEl=null; updateUI(el); }
   }
-  if(configBtn) configBtn.addEventListener('click', function(e){ e.stopPropagation(); if(configPanel.style.display==='none' || !configPanel.style.display) openConfig(); else closeConfig(); if(currentEl) updateUI(currentEl); });
-  if(configClose) configClose.addEventListener('click', cancelConfig);
-  if(configCancel) configCancel.addEventListener('click', cancelConfig);
-  if(configSave) configSave.addEventListener('click', function(){
-    cfgProps = collectProps();
-    if(cfgProps.length===AVAILABLE_PROPS.length) cfgProps = AVAILABLE_PROPS.slice();
-    saveCfg(cfgProps);
-    closeConfig();
-    if(currentEl) { currentEl=null; updateUI(document.elementFromPoint(lastX||0, lastY||0) || document.body); }
-    showToast('Saved ' + cfgProps.length + ' props');
-  });
   shadow.querySelectorAll('.preset-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
       var p = this.getAttribute('data-preset');
@@ -718,11 +714,68 @@
       liveUpdate();
     });
   });
-  // live reflect on change
   if(configChecks) configChecks.addEventListener('change', liveUpdate);
   if(configCustom) configCustom.addEventListener('input', liveUpdate);
   // expose for tests
   window.__ctp_cfg = { get: function(){ return cfgProps.slice(); }, set: function(a){ cfgProps=a; saveCfg(a); } };
+
+  // ── Settings panel: gear toggles it, tabs switch inside it ────────
+  function setPanelOpen(open){
+    if (settingsPanel) settingsPanel.hidden = !open;
+    dialog.classList.toggle('open', open);
+    if (configBtn) {
+      configBtn.classList.toggle('active', open);
+      configBtn.setAttribute('aria-expanded', String(open));
+    }
+  }
+  if (configBtn) configBtn.addEventListener('click', function(e){ e.stopPropagation(); setPanelOpen(settingsPanel.hidden); });
+
+  var tabs = shadow.querySelectorAll('.tab');
+  var panels = shadow.querySelectorAll('.panel');
+  // Path / Output / Toolbar were separate tabs before they were merged.
+  var LEGACY_TABS = { path: 'config', output: 'config', toolbar: 'config' };
+  var TAB_NAMES = ['style', 'config', 'preview'];
+  function showTab(name){
+    if (LEGACY_TABS[name]) name = LEGACY_TABS[name];
+    if (TAB_NAMES.indexOf(name) === -1) name = 'preview';
+    tabs.forEach(function(tab){
+      var on = tab.getAttribute('data-tab') === name;
+      tab.classList.toggle('active', on);
+      tab.setAttribute('aria-selected', String(on));
+    });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-panel') !== name; });
+    settings.tab = name;
+    autoSave();
+  }
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){ showTab(tab.getAttribute('data-tab')); });
+  });
+
+  // ── Toolbar visibility toggles ──────────────────────────────────
+  var TOOLBAR_TARGETS = {
+    'opt-nav': ['#stepBackBtn', '#stepNextBtn'],
+    'opt-move': ['#multiBtn'],
+    'opt-settings': ['#configBtn'],
+    'opt-info': ['#el-info']
+  };
+  Object.keys(TOOLBAR_TARGETS).forEach(function(id){
+    var box = shadow.querySelector('#' + id);
+    if (!box) return;
+    var key = id.replace('opt-', '');
+    if (settings[key] !== undefined) box.checked = !!settings[key];
+    box.addEventListener('change', function(){
+      settings[key] = box.checked;
+      TOOLBAR_TARGETS[id].forEach(function(sel){
+        var el = shadow.querySelector(sel);
+        if (el) el.style.display = box.checked ? '' : 'none';
+      });
+      autoSave();
+    });
+    TOOLBAR_TARGETS[id].forEach(function(sel){
+      var el = shadow.querySelector(sel);
+      if (el && !box.checked) el.style.display = 'none';
+    });
+  });
 
 
   // Highlight overlay
@@ -827,10 +880,7 @@
     currentPath = pb.toText();
     pathDisplay.textContent = '';
     pb.appendTo(pathDisplay);
-    if (!dragging) {
-      var w = Math.min(420, Math.max(280, Math.ceil(currentPath.length * 7.5) + 160));
-      dialog.style.width = w + 'px';
-    }
+    pathDisplay.title = currentPath;
   }
 
   function updateUI(el) {
@@ -937,6 +987,58 @@
     }
   }
 
+  // ── Details (annotations), keyed by path text so they survive re-picks ──
+  var NOTES_KEY = 'ctp-lite-notes';
+  var notesByPath = {};
+  try { notesByPath = JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; } catch (e) { notesByPath = {}; }
+  function saveNotes() {
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(notesByPath)); } catch (e) {}
+    autoSave();
+  }
+  function removeNote(item, txt) {
+    var arr = notesByPath[item.key] || [];
+    var i = arr.indexOf(txt);
+    if (i >= 0) arr.splice(i, 1);
+    if (!arr.length) delete notesByPath[item.key];
+    item.notes = arr;
+    saveNotes();
+  }
+  function flashBtn(btn, label) {
+    var restore = btn.textContent;
+    btn.textContent = label;
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = restore; btn.classList.remove('ok'); }, 1000);
+  }
+  function openNoteEditor(item, body) {
+    if (body.querySelector('.note-editor')) { body.querySelector('.note-input').focus(); return; }
+    var ed = document.createElement('div');
+    ed.className = 'note-editor';
+    var input = document.createElement('input');
+    input.className = 'note-input';
+    input.placeholder = 'e.g. sign-in button — asserts login';
+    input.maxLength = 120;
+    var add = document.createElement('button');
+    add.className = 'note-save';
+    add.textContent = 'Add';
+    ed.appendChild(input);
+    ed.appendChild(add);
+    body.appendChild(ed);
+    input.focus();
+    var commit = function () {
+      var v = input.value.trim();
+      if (!v) { ed.remove(); return; }
+      if (!notesByPath[item.key]) notesByPath[item.key] = [];
+      notesByPath[item.key].push(v);
+      item.notes = notesByPath[item.key];
+      saveNotes();
+      renderQueue();
+    };
+    add.addEventListener('click', commit);
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') commit();
+      if (ev.key === 'Escape') ed.remove();
+    });
+  }
   function renderQueue() {
     if (!queueList) return;
     queueList.textContent = '';
@@ -947,33 +1049,99 @@
     }
     for (var i = 0; i < collected.length; i++) {
       (function (item) {
-        var row = document.createElement('div');
-        row.className = 'q-row';
-        var num = document.createElement('span');
-        num.className = 'q-num';
-        num.textContent = item.n + '.';
-        var p = document.createElement('span');
-        p.className = 'q-path';
         var full;
         try { full = getSelectorPath(item.el, formatMode); } catch (e) { full = '(detached)'; }
+        item.key = full;
+        item.notes = notesByPath[full] || [];
+
+        var row = document.createElement('div');
+        row.className = 'preview-row';
+
+        var num = document.createElement('span');
+        num.className = 'n';
+        num.textContent = item.n;
+
+        var body = document.createElement('div');
+        body.className = 'preview-body';
+
+        var p = document.createElement('span');
+        p.className = 'path-text';
         p.textContent = truncatePath(full);
         p.title = full;
-        var x = document.createElement('button');
-        x.className = 'q-remove';
-        x.textContent = '\u00d7';
-        x.title = 'Remove #' + item.n;
-        x.addEventListener('click', function (e) { e.stopPropagation(); removeItem(item.el); });
+
+        var actions = document.createElement('div');
+        actions.className = 'row-actions';
+
+        var bCopy = document.createElement('button');
+        bCopy.className = 'copy-one';
+        bCopy.textContent = 'Copy';
+        bCopy.title = 'Copy this path';
+        bCopy.addEventListener('click', function (e) {
+          e.stopPropagation();
+          copyToClipboard(full).then(function () {
+            flashBtn(bCopy, 'Copied');
+            showToast('Copied path #' + item.n);
+          }).catch(function () { showToast('Clipboard failed', true); });
+        });
+
+        var bNote = document.createElement('button');
+        bNote.className = 'add-note';
+        bNote.textContent = 'Add Details';
+        bNote.title = 'Annotate what this path is for';
+        bNote.addEventListener('click', function (e) { e.stopPropagation(); openNoteEditor(item, body); });
+
+        var bView = document.createElement('button');
+        bView.className = 'view-one';
+        bView.textContent = 'View Path';
+        bView.title = 'Show the full path';
+        bView.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var expanded = row.classList.toggle('expanded');
+          p.textContent = expanded ? full : truncatePath(full);
+          bView.textContent = expanded ? 'Hide Path' : 'View Path';
+        });
+
+        actions.appendChild(bCopy);
+        actions.appendChild(bNote);
+        actions.appendChild(bView);
+        body.appendChild(p);
+        body.appendChild(actions);
+
+        var notes = document.createElement('div');
+        notes.className = 'preview-notes';
+        item.notes.forEach(function (txt) {
+          var note = document.createElement('span');
+          note.className = 'note';
+          var s = document.createElement('span');
+          s.textContent = txt;
+          s.title = txt;
+          var x = document.createElement('button');
+          x.textContent = '\u00d7';
+          x.title = 'Remove detail';
+          x.addEventListener('click', function (e) {
+            e.stopPropagation();
+            removeNote(item, txt);
+            note.remove();
+          });
+          note.appendChild(s);
+          note.appendChild(x);
+          notes.appendChild(note);
+        });
+        body.appendChild(notes);
+
         row.appendChild(num);
-        row.appendChild(p);
-        row.appendChild(x);
+        row.appendChild(body);
         queueList.appendChild(row);
       })(collected[i]);
     }
-    if (queueCount) queueCount.textContent = collected.length + ' picked';
+    if (queueCount) queueCount.textContent = collected.length + (collected.length === 1 ? ' path' : ' paths');
     if (copyAllBtn) {
-      copyAllBtn.textContent = 'Copy All (' + collected.length + ')';
+      copyAllBtn.textContent = 'Copy All';
       copyAllBtn.disabled = collected.length === 0;
     }
+    // The toolbar's primary action follows the queue: one path copies what the
+    // pointer is on, several paths copy the whole set.
+    if (copyBtn) copyBtn.textContent = collected.length > 1 ? 'Copy All Path' : 'Copy path';
     if (sepSelect && sepSelect.value !== sepStyle) sepSelect.value = sepStyle;
   }
 
@@ -1037,6 +1205,7 @@
     copyToClipboard(text).then(function () {
       showToast('Copied ' + collected.length + ' paths (' + sepStyle + ')');
       if (copyAllBtn) copyAllBtn.textContent = 'Copied!';
+      if (copyBtn) flashBtn(copyBtn, 'Copied!');
       setTimeout(renderQueue, 1200);
       if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
     }).catch(function () {
@@ -1065,7 +1234,10 @@
       var preview = copyText.length > 50 ? copyText.slice(0, 47) + '...' : copyText;
       showToast('Copied ' + formatMode + ': ' + preview + '  [' + pct + '%]');
       if (stayOpen) {
-        setTimeout(function() { copyBtn.textContent = 'Copy path'; copyBtn.classList.remove('copied'); }, 1200);
+        setTimeout(function () {
+          copyBtn.textContent = collected.length > 1 ? 'Copy All Path' : 'Copy path';
+          copyBtn.classList.remove('copied');
+        }, 1200);
       } else {
         dialog.classList.add('closing');
         setTimeout(quit, 300);
@@ -1152,7 +1324,6 @@
       frozen = false;
       dialog.classList.remove('frozen');
       overlay.classList.remove('frozen');
-      freezeHint.style.display = 'block';
       showToast('Resumed hovering');
       return;
     }
@@ -1171,7 +1342,6 @@
     frozen = true;
     dialog.classList.add('frozen');
     overlay.classList.add('frozen');
-    freezeHint.style.display = 'none';
     showToast('Frozen — left click to unfreeze');
     var el = elFromPoint(e.clientX, e.clientY);
     if (el) {
@@ -1213,23 +1383,31 @@
     dragging = false;
   }
 
-  copyBtn.addEventListener('click', function(e) { doCopy(e.ctrlKey); });
+  copyBtn.addEventListener('click', function (e) {
+    // several paths picked -> the primary action becomes "copy them all"
+    if (collected.length > 1) { doCopyAll(); return; }
+    doCopy(e.ctrlKey);
+  });
   if (copyIdBtn) copyIdBtn.addEventListener('click', function(e) { doCopyId(e.ctrlKey); });
   quitBtn.addEventListener('click', quit);
   stepBackBtn.addEventListener('click', stepBack);
   stepNextBtn.addEventListener('click', stepNext);
   if (multiBtn) multiBtn.addEventListener('click', function (e) { e.stopPropagation(); setMultiMode(!multiMode); });
   if (sepSelect) {
-    try { sepSelect.value = sepStyle; } catch (e) {}
     sepSelect.addEventListener('change', function () {
       sepStyle = this.value;
-      try { localStorage.setItem(SEP_KEY, sepStyle); } catch (e) {}
+      settings.sep = sepStyle;
+      autoSave();
       renderQueue();
     });
   }
   if (copyAllBtn) copyAllBtn.addEventListener('click', doCopyAll);
   if (clearBtn) clearBtn.addEventListener('click', clearQueue);
-  if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () { closeAfterCopy = this.checked; });
+  if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () {
+    closeAfterCopy = this.checked;
+    settings.closeAfterCopy = closeAfterCopy;
+    autoSave();
+  });
   window.addEventListener('scroll', repositionBadges, true);
   window.addEventListener('resize', repositionBadges);
   if (multiBtn) multiBtn.classList.toggle('active', multiMode);
@@ -1254,4 +1432,9 @@
   document.addEventListener('mousemove', onDragMove);
   document.addEventListener('mouseup', onDragEnd);
   document.addEventListener('keydown', onKeyDown, true);
+  // Settings start collapsed; opening them lands on the live path unless the
+  // user last worked in another tab.
+  setPanelOpen(false);
+  showTab(settings.tab || 'preview');
+  renderChecks();
 })();

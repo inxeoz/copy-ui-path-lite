@@ -1,6 +1,6 @@
 // GENERATED FILE — do not edit by hand.
 //   backend : src/picker.core.js
-//   ui      : templates/picker_ui.j2 + themes/carbon.json
+//   ui      : templates/picker_ui.j2 + themes/toolbox.json
 //   rebuild : make ui [THEME=<name>]
 (function () {
   console.log('[copy-ui-path-lite] picker.js loaded');
@@ -580,7 +580,7 @@
   // ── UI markup ──────────────────────────────────────────────────────
   // Generated from templates/picker_ui.j2 + themes/<name>.json.
   // Edit the template/theme and run `make ui` — never edit this line by hand.
-  tpl.innerHTML = /*__CTP_UI__*/"<style>\n*,*::before,*::after{box-sizing:border-box}\n#overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;cursor:crosshair;pointer-events:auto}\n#dialog{position:fixed;bottom:20px;right:20px;width:470px;min-width:320px;max-width:560px;background:#1f1f23;border:1px solid #2e2e33;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#f5f5f5;pointer-events:auto;z-index:1}\n#dialog.closing{animation:ctp-fadeOut .25s ease forwards}\n#dialog-header{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#27272a;color:#fdba74;font-weight:700;font-size:13px;cursor:move;user-select:none;white-space:nowrap}\n#el-info{font-size:11px;font-weight:400;opacity:.75;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:right;white-space:nowrap;color:#fdba74}\n#multiBtn{margin-left:2px;padding:2px 11px;border:1px solid #f97316;border-radius:999px;background:transparent;color:#f97316;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit}\n#multiBtn:hover{background:#f9731622}\n#multiBtn.active{background:#f97316;border-color:#f97316;color:#111111}\n#quitBtn{background:none;border:none;color:#fdba74;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;opacity:.7;flex-shrink:0}\n#quitBtn:hover{opacity:1}\n#dialog-body{display:flex;align-items:stretch;min-height:220px}\n#pane-main{flex:1;min-width:0;display:flex;flex-direction:column}\n#path-display{padding:10px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:#f5f5f5;background:#18181b;border-bottom:1px solid #2e2e33;word-break:break-all;line-height:1.5;max-height:104px;overflow-y:auto;white-space:pre-wrap;min-height:38px}\n#queue-list{display:none;overflow-y:auto;max-height:260px;padding:4px 0 6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;flex:1}\n#queue-list.has-items{display:block}\n.q-row{display:flex;align-items:center;gap:7px;padding:5px 8px;margin:4px 8px;border-radius:6px;background:#232327;border:1px solid #34343a}\n.q-row:hover{border-color:#f97316}\n.q-num{font-weight:800;color:#111111;background:#f97316;border-radius:4px;padding:0 6px;min-width:20px;text-align:center;flex-shrink:0}\n.q-path{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f5f5f5}\n.q-remove{border:none;background:none;color:#f87171;font-size:14px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}\n.q-remove:hover{font-weight:700}\n#pane-side{width:150px;flex-shrink:0;padding:9px;display:flex;flex-direction:column;gap:7px;border-left:1px solid #2e2e33;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px}\n#multi-actions{display:none;flex-direction:column;gap:7px}\n#multi-actions.open{display:flex}\n#queue-count{font-weight:700;color:#f97316}\n#sep-select,#format-select{font-family:inherit;font-size:11px;padding:5px 7px;border:1px solid #3f3f46;border-radius:6px;background:#18181b;color:#f5f5f5;cursor:pointer;outline:none;width:100%}\n#copyAllBtn{padding:7px 10px;border:none;border-radius:7px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;background:#f97316;color:#111111;width:100%}\n#copyAllBtn:hover{background:#fb923c}\n#copyAllBtn:disabled{opacity:.45;cursor:not-allowed}\n#clearBtn{padding:6px 10px;border:1px solid #3f3f46;border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer;background:#232327;color:#f5f5f5;width:100%}\n#clearBtn:hover{border-color:#f97316}\n.close-toggle{display:flex;align-items:center;gap:5px;font-size:11px;color:#a3a3a3;cursor:pointer;white-space:nowrap}\n.side-div{border-top:1px solid #2e2e33;margin:1px 0}\n.nav-btn{padding:6px 10px;border:1px solid #3f3f46;border-radius:7px;background:#232327;color:#f5f5f5;font-family:inherit;font-size:12px;cursor:pointer;width:100%;transition:border-color .15s}\n.nav-btn:hover{border-color:#f97316}\n.nav-btn:disabled{opacity:.4;cursor:not-allowed}\n#copyIdBtn{padding:6px 10px;border:1px solid #3f3f46;border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;background:#232327;color:#f5f5f5;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\n#copyIdBtn:hover{border-color:#f97316}\n#copyIdBtn:disabled{opacity:.4;cursor:not-allowed}\n#copyIdBtn.copied{background:#22c55e;color:#111111;border-color:#22c55e}\n.primary{padding:8px 10px;border:none;border-radius:7px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:#f97316;color:#111111;width:100%;transition:background .15s}\n.primary:hover{background:#fb923c}\n.primary:active{background:#f97316}\n.primary.copied{background:#22c55e;color:#fff}\n#overlay.frozen{cursor:default}\n#dialog.frozen{border-color:#22c55e}\n#config-panel{display:none;padding:10px 12px;background:#18181b;border-top:1px solid #2e2e33;max-height:250px;overflow-y:auto;color:#f5f5f5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}\n.preset-btn{font-size:11px;padding:3px 9px;border:1px solid #3f3f46;border-radius:999px;background:#232327;color:#f5f5f5;cursor:pointer;font-family:inherit}\n.preset-btn:hover{border-color:#f97316}\n#config-checks label{color:#f5f5f5;font-size:12px}\n#config-checks input{accent-color:#f97316}\n#freeze-hint{padding:6px 12px;font-size:11px;color:#a3a3a3;text-align:center;border-top:1px solid #2e2e33;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}\n.p-url{color:#7dd3fc}\n.p-sep{color:#a3a3a3}\n.p-path{color:#f5f5f5}\n.p-corner{color:#fbbf24}\n.p-zindex{color:#c4b5fd}\n.p-ctx_key{color:#86efac}\n.p-ctx_str{color:#6ee7b7}\n.p-ctx_flag{color:#fca5a5}\n.p-path_tid{color:#fdba74}\n.p-sep_path{color:#a3a3a3}\n.p-br_open,.p-br_close{color:#fbbf24}\n.p-ctx_open,.p-ctx_close{color:#86efac}\n</style><svg id=\"overlay\" xmlns=\"http://www.w3.org/2000/svg\"><path id=\"ocean\" fill=\"rgba(0,0,0,0.55)\" fill-rule=\"evenodd\" d=\"\"/><path id=\"island\" fill=\"rgba(249,115,22,0.18)\" stroke=\"#f97316\" stroke-width=\"2\" d=\"\"/></svg><div id=\"dialog\"><div id=\"dialog-header\"><span>$ picker</span><span id=\"el-info\"></span><button id=\"multiBtn\" title=\"Toggle multi-pick mode (Add +)\">[+ add]</button><button id=\"quitBtn\" title=\"Quit (Esc)\">&times;</button></div><div id=\"dialog-body\"><div id=\"pane-main\"><div id=\"path-display\">Hover over an element...</div><div id=\"queue-list\"></div></div><div id=\"pane-side\"><div id=\"multi-actions\"><span id=\"queue-count\">0 picked</span><select id=\"sep-select\" title=\"Separator style\"><option value=\"newline\">newline</option><option value=\"numbered\">numbered</option><option value=\"comma\">comma</option><option value=\"json\">JSON</option></select><button id=\"copyAllBtn\" disabled>Copy All (0)</button><button id=\"clearBtn\">Clear</button><label class=\"close-toggle\"><input type=\"checkbox\" id=\"closeAfterCopy\"> close after copy</label></div><div class=\"side-div\"></div><button id=\"stepBackBtn\" class=\"nav-btn\" title=\"Step to child\">To Child</button><button id=\"stepNextBtn\" class=\"nav-btn\" title=\"Step to parent\">To Parent</button><select id=\"format-select\"><option value=\"context\">Context</option><option value=\"xpath\">XPath</option><option value=\"css\">CSS</option><option value=\"pw\">Playwright</option></select><button id=\"configBtn\" class=\"nav-btn\" title=\"Pick computed style props\">\u2699 style</button><button id=\"copyIdBtn\" title=\"Copy only the selected element id\" disabled>Copy Selected id</button><button id=\"copyBtn\" class=\"primary\">Copy path</button></div></div><div id=\"config-panel\"><div style=\"font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;\">Computed props <span id=\"config-close\" style=\"cursor:pointer;font-size:18px;line-height:1;color:#a3a3a3;\">&times;</span></div><div style=\"display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;\"><button class=\"preset-btn\" data-preset=\"color\">color only</button><button class=\"preset-btn\" data-preset=\"essentials\">essentials</button><button class=\"preset-btn\" data-preset=\"typography\">typography</button><button class=\"preset-btn\" data-preset=\"box\">box</button><button class=\"preset-btn\" data-preset=\"all\">all</button><button class=\"preset-btn\" data-preset=\"clear\">clear</button></div><div id=\"config-checks\" style=\"display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;margin-bottom:8px;\"></div><div style=\"font-size:11px;color:#a3a3a3;margin-bottom:4px;\">Custom (comma-separated, overrides checks if non-empty):</div><textarea id=\"config-custom\" rows=\"2\" style=\"width:100%;font:11px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:6px;border:1px solid #3f3f46;border-radius:6px;resize:vertical;background:#18181b;color:#f5f5f5;\" placeholder=\"e.g. color, background-color, font-size\"></textarea><div style=\"display:flex;justify-content:flex-end;gap:8px;margin-top:8px;\"><button id=\"config-cancel\" class=\"nav-btn\" style=\"width:auto;padding:5px 12px;\">Cancel</button><button id=\"config-save\" class=\"primary\" style=\"width:auto;padding:5px 12px;font-size:12px;\">Save</button></div><div style=\"font-size:10px;color:#71717a;margin-top:6px;\">Saved in localStorage, used for computed=\"...\"</div></div><div id=\"freeze-hint\">right-click: freeze \u2022 \u2699: computed props</div></div>";
+  tpl.innerHTML = /*__CTP_UI__*/"<style>\n  /* Design tokens. Declared on real shadow-tree elements \u2014 `:root` matches\n     nothing inside a shadow root, so it must not be used here. */\n  #dialog, #overlay {\n    --bg: #87ceeb; --ink: #0f172a; --panel: #ffffff;\n    --line: #5aa9d6; --soft: #d7e0ea; --accent: #0f172a;\n    --radius: 12px; --shadow: 0 8px 24px rgba(15,23,42,.18);\n    --row-bg: #f8fafc; --row-border: #d7e0ea;\n    --ghost-bg: #f8fafc; --ghost-border: #d7e0ea; --ghost-ink: #334155;\n    --input-bg: #f8fafc; --input-border: #d7e0ea;\n    --badge-bg: #0f172a; --badge-ink: #ffffff;\n    --muted: #64748b; --faint: #94a3b8; --code: #0f172a;\n    --ok: #16a34a; --err: #b42318;\n    --mono: ui-monospace,Menlo,monospace;\n  }\n  * { box-sizing: border-box; }\n\n  #overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; cursor: crosshair; pointer-events: auto; fill: rgba(15,23,42,0.35); }\n  #ocean { fill: rgba(0, 0, 0, .12); }\n  #island { fill: rgba(15,23,42,0.12); stroke: #0f172a; stroke-width: 2; }\n  #overlay.frozen { cursor: default; }\n\n  /* \u2500\u2500 toolbox shell \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  #dialog {\n    position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: calc(100vw - 40px);\n    font-family: system-ui,-apple-system,Segoe UI,sans-serif; font-size: 13px; line-height: 1.3; color: var(--ink);\n    pointer-events: auto; z-index: 2147483647;\n  }\n  #dialog.closing { animation: ctp-fadeOut .25s ease forwards; }\n  #dialog.frozen .box { border-color: var(--ok); }\n  @keyframes ctp-fadeOut { from { opacity: 1 } to { opacity: 0; transform: translateY(-8px) } }\n\n  /* \u2500\u2500 toolbar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .box { width: 100%; height: 52px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); cursor: move; user-select: none; }\n  .tool.open .box { border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; }\n  .box button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .55); color: var(--ink); cursor: pointer; flex: none; font: inherit; }\n  .box button:hover { background: rgba(255, 255, 255, .85); }\n  .box button.active { background: var(--accent); color: #ffffff; }\n  .box button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }\n  .box .copy { flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--accent); color: #ffffff; font-weight: 700; font-size: 12px; cursor: pointer; }\n  .box .copy:hover { background: #1e293b; }\n\n  /* \u2500\u2500 settings \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  /* The panel floats above the bar. A fixed auto-height box keeps its top edge\n     when it grows, so the settings section must be out of flow \u2014 otherwise the\n     panel opens off the bottom of the viewport. */\n  .settings { position: absolute; bottom: 100%; left: 0; right: 0; width: 100%; max-height: calc(100vh - 96px); overflow: auto; margin: 0; background: var(--panel); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; box-shadow: var(--shadow); padding: 14px 16px; text-align: left; font-family: system-ui,-apple-system,Segoe UI,sans-serif; }\n  .tool.open .box { border-radius: 0 0 var(--radius) var(--radius); }\n  .settings[hidden] { display: none; }\n  .settings h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; justify-content: space-between; }\n  .save-state { font-size: 10px; font-weight: 400; color: var(--ok); }\n  .settings .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft); padding-bottom: 8px; }\n  .settings .tab { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }\n  .settings .tab:hover { color: var(--ghost-ink); background: var(--ghost-bg); }\n  .settings .tab.active { color: var(--ink); background: var(--ghost-bg); border-color: var(--soft); font-weight: 600; }\n  .panel { min-height: 118px; }\n  .panel[hidden] { display: none; }\n\n  /* \u2500\u2500 style panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }\n  .settings .chip { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 11.5px; white-space: nowrap; cursor: pointer; }\n  .settings .chip:hover { background: var(--row-bg); border-color: var(--ghost-border); }\n  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; max-height: 150px; overflow: auto; margin-bottom: 12px; padding-right: 2px; font-size: 12px; color: var(--ghost-ink); }\n  .checks label { display: flex; align-items: center; gap: 7px; cursor: pointer; }\n  .checks input { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }\n  .custom-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }\n  .settings textarea { width: 100%; min-height: 44px; padding: 6px 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--ink); font-family: var(--mono); font-size: 11px; resize: vertical; }\n  .settings textarea:focus { outline: none; border-color: var(--faint); }\n\n  /* \u2500\u2500 path / output / toolbar panels \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--ghost-ink); }\n  .row select { width: 150px; height: 28px; padding: 0 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }\n  .row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }\n  .row input[type=\"checkbox\"] { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }\n\n  .settings .btn { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 28px; padding: 0 12px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }\n  .settings .btn:hover { background: var(--row-bg); }\n  .settings .btn.save { background: var(--accent); color: #ffffff; border-color: var(--accent); font-weight: 700; }\n  .settings .btn.save:hover { background: #1e293b; }\n  .settings .btn:disabled { opacity: .45; cursor: not-allowed; }\n  .settings .btn.full { width: 100%; margin-top: 10px; }\n  .side-div { border-top: 1px solid var(--soft); margin: 6px 0; }\n\n  /* \u2500\u2500 path preview panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .settings .path-text { flex: 1; min-width: 0; min-height: 28px; display: flex; align-items: center; padding: 4px 8px; border: 1px solid var(--soft); border-radius: 6px; background: var(--ghost-bg); color: var(--code); font-family: var(--mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n  #path-display { white-space: pre-wrap; overflow: auto; max-height: 96px; align-items: flex-start; line-height: 1.45; }\n  .settings .preview-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow: auto; margin: 8px 0 10px; padding-right: 2px; }\n  .settings .preview-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px; border: 1px solid var(--row-border); border-radius: 8px; background: var(--row-bg); }\n  .settings .preview-row:hover { border-color: var(--accent); }\n  .settings .preview-row .n { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--badge-bg); color: var(--badge-ink); font-size: 11px; font-weight: 700; margin-top: 3px; }\n  .settings .preview-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }\n  .settings .row-actions { display: flex; gap: 6px; }\n  .settings .row-actions button { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 22px; padding: 0 9px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 10.5px; font-weight: 600; white-space: nowrap; cursor: pointer; }\n  .settings .row-actions button:hover { border-color: var(--accent); color: var(--ink); }\n  .settings .row-actions button.ok { background: var(--ok); border-color: var(--ok); color: #ffffff; }\n  .settings .preview-row.expanded .path-text { white-space: normal; word-break: break-all; overflow: visible; }\n  .settings .preview-notes { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }\n  .settings .preview-notes:empty { display: none; }\n  .settings .note { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 10px; color: #78350f; background: #fffbeb; border: 1px solid #fde68a; border-radius: 999px; padding: 1px 4px 1px 7px; }\n  .settings .note span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n  .settings .note button { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #b45309; font-size: 11px; line-height: 1; cursor: pointer; }\n  .settings .note button:hover { background: #fde68a; }\n  .settings .note-editor { display: flex; gap: 4px; align-items: center; }\n  .settings .note-input { flex: 1; min-width: 0; height: 24px; padding: 0 7px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 11px; }\n  .settings .note-input:focus { outline: none; border-color: var(--accent); }\n  .settings .note-save { flex: none; display: inline-flex; align-items: center; justify-content: center; width: auto; height: 24px; padding: 0 9px; border: 0; border-radius: 6px; background: var(--accent); color: #ffffff; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }\n  .settings .preview-meta { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }\n  .settings .meta { font-size: 10px; color: var(--muted); background: var(--row-bg); border: 1px solid var(--soft); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }\n  .settings .preview-actions { display: none; align-items: center; justify-content: space-between; gap: 8px; }\n  .settings .preview-actions.open { display: flex; }\n  .settings .preview-actions .group { display: flex; gap: 8px; }\n</style>\n<svg id=\"overlay\" xmlns=\"http://www.w3.org/2000/svg\"><path id=\"ocean\" fill-rule=\"evenodd\" d=\"\"/><path id=\"island\" d=\"\"/></svg>\n<div id=\"dialog\" class=\"tool\">\n  <div class=\"box\" id=\"dialog-header\">\n    <button id=\"stepBackBtn\" title=\"To child\" aria-label=\"To child\"><svg viewBox=\"0 0 24 24\"><path d=\"M15 6l-6 6 6 6\"/></svg></button>\n    <button id=\"stepNextBtn\" title=\"To parent\" aria-label=\"To parent\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 6l6 6-6 6\"/></svg></button>\n    <button id=\"configBtn\" title=\"Settings\" aria-label=\"Settings\" aria-expanded=\"false\" aria-controls=\"settingsPanel\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg></button>\n    <button id=\"multiBtn\" title=\"Move\" aria-label=\"Move\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3\"/></svg></button>\n    <button class=\"copy\" id=\"copyBtn\" title=\"Copy path\" aria-label=\"Copy path\">Copy path</button>\n    <button class=\"close\" id=\"quitBtn\" title=\"Quit\" aria-label=\"Quit\"><svg viewBox=\"0 0 24 24\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg></button>\n  </div>\n\n  <section class=\"settings\" id=\"settingsPanel\" hidden>\n    <h2>Settings <span class=\"save-state\" id=\"saveState\">Saved</span></h2>\n    <div class=\"tabs\">\n      <button class=\"tab\" data-tab=\"style\">Style</button>\n      <button class=\"tab\" data-tab=\"config\">Config</button>\n      <button class=\"tab\" data-tab=\"preview\">Path Preview</button>\n    </div>\n\n    <div class=\"panel\" data-panel=\"style\" hidden>\n      <div class=\"presets\">\n        <button class=\"chip preset-btn\" data-preset=\"color\">color only</button>\n        <button class=\"chip preset-btn\" data-preset=\"essentials\">essentials</button>\n        <button class=\"chip preset-btn\" data-preset=\"typography\">typography</button>\n        <button class=\"chip preset-btn\" data-preset=\"box\">box</button>\n        <button class=\"chip preset-btn\" data-preset=\"all\">all</button>\n        <button class=\"chip preset-btn\" data-preset=\"clear\">clear</button>\n      </div>\n      <div class=\"checks\" id=\"config-checks\"></div>\n      <div class=\"custom-label\">Custom (comma-separated):</div>\n      <textarea id=\"config-custom\" rows=\"2\" placeholder=\"e.g. color, background-color, font-size\"></textarea>\n    </div>\n\n    <div class=\"panel\" data-panel=\"config\" hidden>\n      <div class=\"row\"><span>Default format</span><select id=\"format-select\"><option value=\"context\">Context</option><option value=\"xpath\">XPath</option><option value=\"css\">CSS</option><option value=\"pw\">Playwright</option></select></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><span>Separator</span><select id=\"sep-select\"><option value=\"newline\">newline</option><option value=\"numbered\">numbered</option><option value=\"comma\">comma</option><option value=\"json\">JSON</option></select></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"closeAfterCopy\"> close after copy</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-nav\" checked> show to child/parent</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-move\" checked> show move</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-settings\" checked> show settings</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-info\" checked> show element info</label></div>\n    </div>\n\n    <div class=\"panel\" data-panel=\"preview\" hidden>\n      <span class=\"path-text\" id=\"path-display\">Hover over an element\u2026</span>\n      <div class=\"preview-meta\"><span class=\"meta\" id=\"el-info\"></span></div>\n      <div class=\"preview-list\" id=\"queue-list\"></div>\n      <div class=\"preview-actions\" id=\"multi-actions\">\n        <span class=\"meta\" id=\"queue-count\">0 paths</span>\n        <div class=\"group\">\n          <button class=\"btn\" id=\"clearBtn\">Clear</button>\n          <button class=\"btn save\" id=\"copyAllBtn\" disabled>Copy All</button>\n        </div>\n      </div>\n      <button class=\"btn full\" id=\"copyIdBtn\" disabled>Copy Selected id</button>\n    </div>\n  </section>\n</div>";
   shadow.appendChild(tpl.content.cloneNode(true));
 
   document.documentElement.appendChild(host);
@@ -598,7 +598,6 @@
   var quitBtn = shadow.querySelector('#quitBtn');
   var stepBackBtn = shadow.querySelector('#stepBackBtn');
   var stepNextBtn = shadow.querySelector('#stepNextBtn');
-  var freezeHint = shadow.querySelector('#freeze-hint');
   var multiBtn = shadow.querySelector('#multiBtn');
   var queueList = shadow.querySelector('#queue-list');
   var multiActions = shadow.querySelector('#multi-actions');
@@ -607,17 +606,42 @@
   var copyAllBtn = shadow.querySelector('#copyAllBtn');
   var clearBtn = shadow.querySelector('#clearBtn');
   var closeAfterCopyBox = shadow.querySelector('#closeAfterCopy');
-  var formatMode = 'context';
+
+  // ── Settings (one localStorage record, debounced auto-save) ───────
+  var SETTINGS_KEY = 'ctp-lite-settings';
+  var settings = {};
+  try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch (e) { settings = {}; }
+  if (!settings.sep) {
+    // pre-toolbox builds stored the separator under its own key
+    try { var _oldSep = localStorage.getItem('ctp-lite-sep-style'); if (_oldSep) settings.sep = _oldSep; } catch (e) {}
+  }
+  var saveState = shadow.querySelector('#saveState');
+  var saveTimer = null;
+  function autoSave() {
+    if (!saveState) return;
+    saveState.textContent = 'Saving…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+      saveState.textContent = 'Saved ✓';
+    }, 350);
+  }
+
   var frozen = false;
   // ── Multi-pick state ─────────────────────────────────────────────
   var collected = [];
   var multiMode = true;
-  var SEP_KEY = 'ctp-lite-sep-style';
-  var sepStyle = 'newline';
-  try { var _s = localStorage.getItem(SEP_KEY); if (_s) sepStyle = _s; } catch (e) {}
-  var closeAfterCopy = false;
+  var sepStyle = settings.sep || 'newline';
+  var closeAfterCopy = !!settings.closeAfterCopy;
+  var formatMode = settings.format || 'context';
+  try { formatSelect.value = formatMode; } catch (e) {}
+  try { sepSelect.value = sepStyle; } catch (e) {}
+  if (closeAfterCopyBox) closeAfterCopyBox.checked = closeAfterCopy;
+
   formatSelect.addEventListener('change', function() {
     formatMode = this.value;
+    settings.format = formatMode;
+    autoSave();
     if (currentEl) renderPathDisplay(currentEl, getZ(currentEl));
     renderQueue();
   });
@@ -650,10 +674,7 @@
   var cfgProps = loadCfg();
 
   var configBtn = shadow.querySelector('#configBtn');
-  var configPanel = shadow.querySelector('#config-panel');
-  var configClose = shadow.querySelector('#config-close');
-  var configCancel = shadow.querySelector('#config-cancel');
-  var configSave = shadow.querySelector('#config-save');
+  var settingsPanel = shadow.querySelector('#settingsPanel');
   var configChecks = shadow.querySelector('#config-checks');
   var configCustom = shadow.querySelector('#config-custom');
 
@@ -665,7 +686,6 @@
     var isAll = cfgProps.length===AVAILABLE_PROPS.length || (cfgProps.length===1 && cfgProps[0]==='*');
     AVAILABLE_PROPS.forEach(function(prop){
       var label = document.createElement('label');
-      label.style.cssText='display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;';
       var cb = document.createElement('input');
       cb.type='checkbox'; cb.value=prop;
       cb.checked = isAll ? true : active.indexOf(prop)!==-1;
@@ -676,43 +696,19 @@
     });
     if(!customVal) configCustom.placeholder = cfgProps.join(', ');
   }
-  var cfgSnapshot = null;
-  function openConfig(){
-    cfgSnapshot = cfgProps.slice();
-    configCustom.value = '';
-    renderChecks();
-    configPanel.style.display='block';
-    freezeHint.style.display='none';
-  }
-  function closeConfig(){ configPanel.style.display='none'; freezeHint.style.display='block'; }
-  function cancelConfig(){
-    if(cfgSnapshot) { cfgProps = cfgSnapshot.slice(); try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfgProps)); }catch(e){} }
-    closeConfig();
-    if(currentEl){ var el=currentEl; currentEl=null; updateUI(el); }
-  }
   function collectProps(){
     var custom = configCustom.value.trim();
     if(custom) return custom.split(',').map(function(s){return s.trim()}).filter(Boolean);
     var out=[]; configChecks.querySelectorAll('input:checked').forEach(function(cb){ out.push(cb.value); });
     return out;
   }
+  // Computed props apply live — every edit is persisted, there is no Save button.
   function liveUpdate(){
-    var live = collectProps();
-    cfgProps = live;
-    try{ localStorage.setItem(CFG_KEY, JSON.stringify(cfgProps)); }catch(e){}
+    cfgProps = collectProps();
+    saveCfg(cfgProps);
+    autoSave();
     if(currentEl) { var el=currentEl; currentEl=null; updateUI(el); }
   }
-  if(configBtn) configBtn.addEventListener('click', function(e){ e.stopPropagation(); if(configPanel.style.display==='none' || !configPanel.style.display) openConfig(); else closeConfig(); if(currentEl) updateUI(currentEl); });
-  if(configClose) configClose.addEventListener('click', cancelConfig);
-  if(configCancel) configCancel.addEventListener('click', cancelConfig);
-  if(configSave) configSave.addEventListener('click', function(){
-    cfgProps = collectProps();
-    if(cfgProps.length===AVAILABLE_PROPS.length) cfgProps = AVAILABLE_PROPS.slice();
-    saveCfg(cfgProps);
-    closeConfig();
-    if(currentEl) { currentEl=null; updateUI(document.elementFromPoint(lastX||0, lastY||0) || document.body); }
-    showToast('Saved ' + cfgProps.length + ' props');
-  });
   shadow.querySelectorAll('.preset-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
       var p = this.getAttribute('data-preset');
@@ -722,11 +718,68 @@
       liveUpdate();
     });
   });
-  // live reflect on change
   if(configChecks) configChecks.addEventListener('change', liveUpdate);
   if(configCustom) configCustom.addEventListener('input', liveUpdate);
   // expose for tests
   window.__ctp_cfg = { get: function(){ return cfgProps.slice(); }, set: function(a){ cfgProps=a; saveCfg(a); } };
+
+  // ── Settings panel: gear toggles it, tabs switch inside it ────────
+  function setPanelOpen(open){
+    if (settingsPanel) settingsPanel.hidden = !open;
+    dialog.classList.toggle('open', open);
+    if (configBtn) {
+      configBtn.classList.toggle('active', open);
+      configBtn.setAttribute('aria-expanded', String(open));
+    }
+  }
+  if (configBtn) configBtn.addEventListener('click', function(e){ e.stopPropagation(); setPanelOpen(settingsPanel.hidden); });
+
+  var tabs = shadow.querySelectorAll('.tab');
+  var panels = shadow.querySelectorAll('.panel');
+  // Path / Output / Toolbar were separate tabs before they were merged.
+  var LEGACY_TABS = { path: 'config', output: 'config', toolbar: 'config' };
+  var TAB_NAMES = ['style', 'config', 'preview'];
+  function showTab(name){
+    if (LEGACY_TABS[name]) name = LEGACY_TABS[name];
+    if (TAB_NAMES.indexOf(name) === -1) name = 'preview';
+    tabs.forEach(function(tab){
+      var on = tab.getAttribute('data-tab') === name;
+      tab.classList.toggle('active', on);
+      tab.setAttribute('aria-selected', String(on));
+    });
+    panels.forEach(function(p){ p.hidden = p.getAttribute('data-panel') !== name; });
+    settings.tab = name;
+    autoSave();
+  }
+  tabs.forEach(function(tab){
+    tab.addEventListener('click', function(){ showTab(tab.getAttribute('data-tab')); });
+  });
+
+  // ── Toolbar visibility toggles ──────────────────────────────────
+  var TOOLBAR_TARGETS = {
+    'opt-nav': ['#stepBackBtn', '#stepNextBtn'],
+    'opt-move': ['#multiBtn'],
+    'opt-settings': ['#configBtn'],
+    'opt-info': ['#el-info']
+  };
+  Object.keys(TOOLBAR_TARGETS).forEach(function(id){
+    var box = shadow.querySelector('#' + id);
+    if (!box) return;
+    var key = id.replace('opt-', '');
+    if (settings[key] !== undefined) box.checked = !!settings[key];
+    box.addEventListener('change', function(){
+      settings[key] = box.checked;
+      TOOLBAR_TARGETS[id].forEach(function(sel){
+        var el = shadow.querySelector(sel);
+        if (el) el.style.display = box.checked ? '' : 'none';
+      });
+      autoSave();
+    });
+    TOOLBAR_TARGETS[id].forEach(function(sel){
+      var el = shadow.querySelector(sel);
+      if (el && !box.checked) el.style.display = 'none';
+    });
+  });
 
 
   // Highlight overlay
@@ -831,10 +884,7 @@
     currentPath = pb.toText();
     pathDisplay.textContent = '';
     pb.appendTo(pathDisplay);
-    if (!dragging) {
-      var w = Math.min(420, Math.max(280, Math.ceil(currentPath.length * 7.5) + 160));
-      dialog.style.width = w + 'px';
-    }
+    pathDisplay.title = currentPath;
   }
 
   function updateUI(el) {
@@ -941,6 +991,58 @@
     }
   }
 
+  // ── Details (annotations), keyed by path text so they survive re-picks ──
+  var NOTES_KEY = 'ctp-lite-notes';
+  var notesByPath = {};
+  try { notesByPath = JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; } catch (e) { notesByPath = {}; }
+  function saveNotes() {
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(notesByPath)); } catch (e) {}
+    autoSave();
+  }
+  function removeNote(item, txt) {
+    var arr = notesByPath[item.key] || [];
+    var i = arr.indexOf(txt);
+    if (i >= 0) arr.splice(i, 1);
+    if (!arr.length) delete notesByPath[item.key];
+    item.notes = arr;
+    saveNotes();
+  }
+  function flashBtn(btn, label) {
+    var restore = btn.textContent;
+    btn.textContent = label;
+    btn.classList.add('ok');
+    setTimeout(function () { btn.textContent = restore; btn.classList.remove('ok'); }, 1000);
+  }
+  function openNoteEditor(item, body) {
+    if (body.querySelector('.note-editor')) { body.querySelector('.note-input').focus(); return; }
+    var ed = document.createElement('div');
+    ed.className = 'note-editor';
+    var input = document.createElement('input');
+    input.className = 'note-input';
+    input.placeholder = 'e.g. sign-in button — asserts login';
+    input.maxLength = 120;
+    var add = document.createElement('button');
+    add.className = 'note-save';
+    add.textContent = 'Add';
+    ed.appendChild(input);
+    ed.appendChild(add);
+    body.appendChild(ed);
+    input.focus();
+    var commit = function () {
+      var v = input.value.trim();
+      if (!v) { ed.remove(); return; }
+      if (!notesByPath[item.key]) notesByPath[item.key] = [];
+      notesByPath[item.key].push(v);
+      item.notes = notesByPath[item.key];
+      saveNotes();
+      renderQueue();
+    };
+    add.addEventListener('click', commit);
+    input.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') commit();
+      if (ev.key === 'Escape') ed.remove();
+    });
+  }
   function renderQueue() {
     if (!queueList) return;
     queueList.textContent = '';
@@ -951,33 +1053,99 @@
     }
     for (var i = 0; i < collected.length; i++) {
       (function (item) {
-        var row = document.createElement('div');
-        row.className = 'q-row';
-        var num = document.createElement('span');
-        num.className = 'q-num';
-        num.textContent = item.n + '.';
-        var p = document.createElement('span');
-        p.className = 'q-path';
         var full;
         try { full = getSelectorPath(item.el, formatMode); } catch (e) { full = '(detached)'; }
+        item.key = full;
+        item.notes = notesByPath[full] || [];
+
+        var row = document.createElement('div');
+        row.className = 'preview-row';
+
+        var num = document.createElement('span');
+        num.className = 'n';
+        num.textContent = item.n;
+
+        var body = document.createElement('div');
+        body.className = 'preview-body';
+
+        var p = document.createElement('span');
+        p.className = 'path-text';
         p.textContent = truncatePath(full);
         p.title = full;
-        var x = document.createElement('button');
-        x.className = 'q-remove';
-        x.textContent = '\u00d7';
-        x.title = 'Remove #' + item.n;
-        x.addEventListener('click', function (e) { e.stopPropagation(); removeItem(item.el); });
+
+        var actions = document.createElement('div');
+        actions.className = 'row-actions';
+
+        var bCopy = document.createElement('button');
+        bCopy.className = 'copy-one';
+        bCopy.textContent = 'Copy';
+        bCopy.title = 'Copy this path';
+        bCopy.addEventListener('click', function (e) {
+          e.stopPropagation();
+          copyToClipboard(full).then(function () {
+            flashBtn(bCopy, 'Copied');
+            showToast('Copied path #' + item.n);
+          }).catch(function () { showToast('Clipboard failed', true); });
+        });
+
+        var bNote = document.createElement('button');
+        bNote.className = 'add-note';
+        bNote.textContent = 'Add Details';
+        bNote.title = 'Annotate what this path is for';
+        bNote.addEventListener('click', function (e) { e.stopPropagation(); openNoteEditor(item, body); });
+
+        var bView = document.createElement('button');
+        bView.className = 'view-one';
+        bView.textContent = 'View Path';
+        bView.title = 'Show the full path';
+        bView.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var expanded = row.classList.toggle('expanded');
+          p.textContent = expanded ? full : truncatePath(full);
+          bView.textContent = expanded ? 'Hide Path' : 'View Path';
+        });
+
+        actions.appendChild(bCopy);
+        actions.appendChild(bNote);
+        actions.appendChild(bView);
+        body.appendChild(p);
+        body.appendChild(actions);
+
+        var notes = document.createElement('div');
+        notes.className = 'preview-notes';
+        item.notes.forEach(function (txt) {
+          var note = document.createElement('span');
+          note.className = 'note';
+          var s = document.createElement('span');
+          s.textContent = txt;
+          s.title = txt;
+          var x = document.createElement('button');
+          x.textContent = '\u00d7';
+          x.title = 'Remove detail';
+          x.addEventListener('click', function (e) {
+            e.stopPropagation();
+            removeNote(item, txt);
+            note.remove();
+          });
+          note.appendChild(s);
+          note.appendChild(x);
+          notes.appendChild(note);
+        });
+        body.appendChild(notes);
+
         row.appendChild(num);
-        row.appendChild(p);
-        row.appendChild(x);
+        row.appendChild(body);
         queueList.appendChild(row);
       })(collected[i]);
     }
-    if (queueCount) queueCount.textContent = collected.length + ' picked';
+    if (queueCount) queueCount.textContent = collected.length + (collected.length === 1 ? ' path' : ' paths');
     if (copyAllBtn) {
-      copyAllBtn.textContent = 'Copy All (' + collected.length + ')';
+      copyAllBtn.textContent = 'Copy All';
       copyAllBtn.disabled = collected.length === 0;
     }
+    // The toolbar's primary action follows the queue: one path copies what the
+    // pointer is on, several paths copy the whole set.
+    if (copyBtn) copyBtn.textContent = collected.length > 1 ? 'Copy All Path' : 'Copy path';
     if (sepSelect && sepSelect.value !== sepStyle) sepSelect.value = sepStyle;
   }
 
@@ -1041,6 +1209,7 @@
     copyToClipboard(text).then(function () {
       showToast('Copied ' + collected.length + ' paths (' + sepStyle + ')');
       if (copyAllBtn) copyAllBtn.textContent = 'Copied!';
+      if (copyBtn) flashBtn(copyBtn, 'Copied!');
       setTimeout(renderQueue, 1200);
       if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
     }).catch(function () {
@@ -1069,7 +1238,10 @@
       var preview = copyText.length > 50 ? copyText.slice(0, 47) + '...' : copyText;
       showToast('Copied ' + formatMode + ': ' + preview + '  [' + pct + '%]');
       if (stayOpen) {
-        setTimeout(function() { copyBtn.textContent = 'Copy path'; copyBtn.classList.remove('copied'); }, 1200);
+        setTimeout(function () {
+          copyBtn.textContent = collected.length > 1 ? 'Copy All Path' : 'Copy path';
+          copyBtn.classList.remove('copied');
+        }, 1200);
       } else {
         dialog.classList.add('closing');
         setTimeout(quit, 300);
@@ -1156,7 +1328,6 @@
       frozen = false;
       dialog.classList.remove('frozen');
       overlay.classList.remove('frozen');
-      freezeHint.style.display = 'block';
       showToast('Resumed hovering');
       return;
     }
@@ -1175,7 +1346,6 @@
     frozen = true;
     dialog.classList.add('frozen');
     overlay.classList.add('frozen');
-    freezeHint.style.display = 'none';
     showToast('Frozen — left click to unfreeze');
     var el = elFromPoint(e.clientX, e.clientY);
     if (el) {
@@ -1217,23 +1387,31 @@
     dragging = false;
   }
 
-  copyBtn.addEventListener('click', function(e) { doCopy(e.ctrlKey); });
+  copyBtn.addEventListener('click', function (e) {
+    // several paths picked -> the primary action becomes "copy them all"
+    if (collected.length > 1) { doCopyAll(); return; }
+    doCopy(e.ctrlKey);
+  });
   if (copyIdBtn) copyIdBtn.addEventListener('click', function(e) { doCopyId(e.ctrlKey); });
   quitBtn.addEventListener('click', quit);
   stepBackBtn.addEventListener('click', stepBack);
   stepNextBtn.addEventListener('click', stepNext);
   if (multiBtn) multiBtn.addEventListener('click', function (e) { e.stopPropagation(); setMultiMode(!multiMode); });
   if (sepSelect) {
-    try { sepSelect.value = sepStyle; } catch (e) {}
     sepSelect.addEventListener('change', function () {
       sepStyle = this.value;
-      try { localStorage.setItem(SEP_KEY, sepStyle); } catch (e) {}
+      settings.sep = sepStyle;
+      autoSave();
       renderQueue();
     });
   }
   if (copyAllBtn) copyAllBtn.addEventListener('click', doCopyAll);
   if (clearBtn) clearBtn.addEventListener('click', clearQueue);
-  if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () { closeAfterCopy = this.checked; });
+  if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () {
+    closeAfterCopy = this.checked;
+    settings.closeAfterCopy = closeAfterCopy;
+    autoSave();
+  });
   window.addEventListener('scroll', repositionBadges, true);
   window.addEventListener('resize', repositionBadges);
   if (multiBtn) multiBtn.classList.toggle('active', multiMode);
@@ -1258,4 +1436,9 @@
   document.addEventListener('mousemove', onDragMove);
   document.addEventListener('mouseup', onDragEnd);
   document.addEventListener('keydown', onKeyDown, true);
+  // Settings start collapsed; opening them lands on the live path unless the
+  // user last worked in another tab.
+  setPanelOpen(false);
+  showTab(settings.tab || 'preview');
+  renderChecks();
 })();

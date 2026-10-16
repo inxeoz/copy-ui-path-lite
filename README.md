@@ -74,17 +74,23 @@ controls the syntax colors of the path preview (`url`, `path_tid`, `ctx_key`, �
 Edit `templates/picker_ui.j2`. The backend binds to the UI by **element id** and a few
 **class hooks** — keep these and any layout works:
 
-- ids (29): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
-  `path-display`, `queue-list`, `queue-count`, `sep-select`, `copyAllBtn`, `clearBtn`,
-  `closeAfterCopy`, `multiBtn`, `quitBtn`, `stepBackBtn`, `stepNextBtn`, `format-select`,
-  `configBtn`, `config-panel`, `config-close`, `config-checks`, `config-custom`,
-  `config-cancel`, `config-save`, `copyIdBtn`, `copyBtn`, `freeze-hint`, `multi-actions`
-- classes toggled by JS: `closing`, `frozen` (on `#dialog`/`#overlay`), `active`
-  (`#multiBtn`), `open` (`#multi-actions`), `has-items` (`#queue-list`), `copied`
-  (copy buttons), plus row classes `q-row`, `q-num`, `q-path`, `q-remove`
-- `#multi-actions` is the group that hides/shows with Add+ mode — put only the
-  multi-pick controls (count, separator, Copy All, Clear, close-after) inside it, and
-  keep the walk/format/copy buttons outside it so they stay visible.
+- ids (28): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
+  `settingsPanel`, `saveState`, `path-display`, `queue-list`, `queue-count`,
+  `sep-select`, `copyAllBtn`, `clearBtn`, `closeAfterCopy`, `multiBtn`, `quitBtn`,
+  `stepBackBtn`, `stepNextBtn`, `format-select`, `configBtn`, `config-checks`,
+  `config-custom`, `copyIdBtn`, `copyBtn`, `opt-nav`, `opt-move`, `opt-settings`,
+  `opt-info`
+- classes: `tab` + `data-tab` on the tab buttons, `panel` + `data-panel` on the panels,
+  `active` (`#multiBtn`, settings tabs), `open` (`#dialog`, `.preview-actions`),
+  `has-items` (`#queue-list`), `closing`, `frozen` (`#dialog` / `#overlay`), plus the
+  queue row classes `preview-row`, `n`, `path-text`, `preview-body`, `row-actions`
+  (`copy-one`, `add-note`, `view-one`), `preview-notes` / `note` / `note-editor`,
+  and `expanded` (a row whose full path is showing)
+
+`#settingsPanel` starts `hidden` and is toggled by `#configBtn`. Keep it out of the
+dialog's normal flow (`position: absolute; bottom: 100%`) — a fixed, auto-height box
+keeps its top edge when its content grows, so an in-flow panel would open below the
+bottom of the viewport.
 
 ## Install (development)
 
@@ -117,12 +123,33 @@ make run-firefox     # needs Node; uses npx web-ext
 The overlay is injected as a closed shadow DOM, so it does not leak styles or script
 into the page.
 
-### Firefox picker
+### The picker UI
+
+The picker opens as a compact **toolbox bar** — copy, freeze, multi-pick, settings, quit —
+with the settings panel collapsed. Click **⚙** to open it above the bar; the panel is
+organised into three tabs:
+
+| Tab | What is in it |
+|---|---|
+| **Style** | computed-property presets, the property list, and a custom comma-separated list |
+| **Config** | path format, separator for multiple paths, close-after-copy, and which toolbar controls to show |
+| **Path Preview** | the live path for the hovered element, the picked-path list, and the copy actions |
+
+Every picked path gets its own row with **Copy**, **Add Details** and **View Path** —
+Copy grabs that single path, Add Details attaches a note describing what the path is
+for (notes are keyed by path text, so they return when you re-pick the same element),
+and View Path expands the row to show the path in full. Once a second path is picked
+the toolbar's primary button switches from **Copy Path** to **Copy All Path**.
+
+Everything saves itself as you change it — there is no Save button. Changes are written to
+`localStorage` under `ctp-lite-settings` (styles), `ctp-lite-notes` (path details), and
+`ctp-lite-computed-props` (the style list), and the indicator in the panel header shows
+`Saving…` / `Saved ✓`. The last tab you used is remembered for the next time the panel opens.
 
 - **Format select** — `Context` (rich, annotated, default), `XPath`, `CSS`, `Playwright`.
 - **Freeze navigation** — right-click freezes the current target, then `To Parent` /
   `To Child` walk the saved path; left-click unfreezes.
-- **⚙ computed style** — pick which computed properties are appended to the path
+- **Computed style** — pick which computed properties are appended to the path
   (colors get an inline swatch); the selection is stored in `localStorage`.
 - **Copy Selected id** — copies just the element's `data-testid` / `id`
   (disabled when the element has neither).
