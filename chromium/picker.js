@@ -555,6 +555,70 @@
     finally { document.body.removeChild(ta); }
   }
 
+  // ── Screenshot capture (element-level crop) ─────────────────────
+
+  function sendMessage(msg) {
+    return new Promise(function (resolve) {
+      try {
+        var chromeObj = window.chrome;
+        var browserObj = window.browser;
+        if (chromeObj && chromeObj.runtime && chromeObj.runtime.sendMessage) {
+          chromeObj.runtime.sendMessage(msg, function (res) {
+            if (chromeObj.runtime.lastError) resolve({ dataUrl: null });
+            else resolve(res || { dataUrl: null });
+          });
+        } else if (browserObj && browserObj.runtime && browserObj.runtime.sendMessage) {
+          browserObj.runtime.sendMessage(msg).then(resolve).catch(function () { resolve({ dataUrl: null }); });
+        } else {
+          resolve({ dataUrl: null });
+        }
+      } catch (e) {
+        resolve({ dataUrl: null });
+      }
+    });
+  }
+
+  function captureElementScreenshot(el) {
+    if (!settings.includeScreenshot || !el) return Promise.resolve(null);
+    var rect = null;
+    try { rect = el.getBoundingClientRect(); } catch (e) { rect = null; }
+    if (!rect || !rect.width || !rect.height) return Promise.resolve(null);
+    return sendMessage({ action: 'ctp-capture-visible' }).then(function (res) {
+      if (!res || !res.dataUrl) {
+        console.error('[copy-ui-path-lite] screenshot capture failed:', res && res.error);
+        return null;
+      }
+      return new Promise(function (resolve) {
+        var img = new Image();
+        img.onload = function () {
+          var dpr = window.devicePixelRatio || 1;
+          var canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(rect.width * dpr));
+          canvas.height = Math.max(1, Math.round(rect.height * dpr));
+          var ctx = canvas.getContext('2d');
+          if (!ctx) { resolve(null); return; }
+          ctx.drawImage(img, rect.left * dpr, rect.top * dpr, rect.width * dpr, rect.height * dpr, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(function (blob) { resolve(blob); }, 'image/png');
+        };
+        img.onerror = function () { resolve(null); };
+        img.src = res.dataUrl;
+      });
+    });
+  }
+
+  function writeClipboardPayload(text, imageBlob) {
+    if (imageBlob && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      try {
+        var item = new ClipboardItem({
+          'text/plain': new Blob([text], { type: 'text/plain' }),
+          'image/png': imageBlob
+        });
+        return navigator.clipboard.write([item]);
+      } catch (e) { console.error('[copy-ui-path-lite] clipboard image write failed:', e); }
+    }
+    return copyToClipboard(text);
+  }
+
   // ── Toast ──────────────────────────────────────────────────────────
 
   function showToast(msg, isError) {
@@ -1919,7 +1983,10 @@
     // Stay-open by default: never hide the picker unless closeAfterCopy is on.
     // (hidePicker sets host display:none, which would strand badges + dialog.)
     if (closeAfterCopy) hidePicker();
-    copyToClipboard(text).then(function () {
+    var shotTarget = currentEl || (collected.length ? collected[0].el : null);
+    captureElementScreenshot(shotTarget).then(function (imgBlob) {
+      return writeClipboardPayload(text, imgBlob);
+    }).then(function () {
       showToast('Copied ' + collected.length + ' paths (' + sepStyle + ')');
       if (copyAllBtn) copyAllBtn.textContent = 'Copied!';
       if (copyBtn) flashBtn(copyBtn, 'Copied!');
@@ -1949,7 +2016,9 @@
     if (!stayOpen) hidePicker();
     copyBtn.textContent = 'Copied!';
     copyBtn.classList.add('copied');
-    copyToClipboard(copyText).then(function () {
+    captureElementScreenshot(currentEl).then(function (imgBlob) {
+      return writeClipboardPayload(copyText, imgBlob);
+    }).then(function () {
       var preview = copyText.length > 50 ? copyText.slice(0, 47) + '...' : copyText;
       showToast('Copied ' + formatMode + ': ' + preview + '  [' + pct + '%]');
       if (stayOpen) {

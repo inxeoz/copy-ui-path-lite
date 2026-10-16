@@ -44,3 +44,19 @@ browser.contextMenus.onClicked.addListener(function (info, tab) {
     injectPicker(tab.id);
   }
 });
+
+// ── Capture visible tab for an element screenshot ──────────────────
+
+browser.runtime.onMessage.addListener(function (msg, sender) {
+  if (!msg || msg.action !== 'ctp-capture-visible') return;
+  var windowId = (sender && sender.tab && sender.tab.windowId) ? sender.tab.windowId : null;
+  var opts = { format: 'png' };
+  if (windowId === null) {
+    return browser.tabs.captureVisibleTab(opts)
+      .then(function (dataUrl) { return { dataUrl: dataUrl }; })
+      .catch(function (err) { return { dataUrl: null, error: String(err && err.message || err) }; });
+  }
+  return browser.tabs.captureVisibleTab(windowId, opts)
+    .then(function (dataUrl) { return { dataUrl: dataUrl }; })
+    .catch(function (err) { return { dataUrl: null, error: String(err && err.message || err) }; });
+});
