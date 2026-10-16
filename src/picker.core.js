@@ -586,17 +586,34 @@
       }
       return new Promise(function (resolve) {
         var img = new Image();
-        img.onload = function () {
+        img.onload = function () { console.log('[copy-ui-path-lite] capture crop img onload');
           var dpr = window.devicePixelRatio || 1;
+          // Compress aggressively: scale down large elements and use JPEG
+          // so the embedded base64 prompt stays much shorter.
+          // User-configurable resolution/compression (0-100%).
+          // Resolution % scales the element dimensions directly.
+          // Compression % increases JPEG compression (higher = more compressed).
+          var resoPct = parseFloat(settings.imageResolutionPct || '50');
+          if (!resoPct || resoPct <= 0) resoPct = 1;
+          if (resoPct > 100) resoPct = 100;
+          var compLevel = parseFloat(settings.imageCompressionLevel || '40');
+          if (compLevel < 0) compLevel = 0;
+          if (compLevel > 100) compLevel = 100;
+          var quality = Math.max(0.01, (100 - compLevel) / 100);
+          var scale = resoPct / 100;
+          var outW = Math.max(1, Math.round(rect.width * dpr * scale));
+          var outH = Math.max(1, Math.round(rect.height * dpr * scale));
           var canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(rect.width * dpr));
-          canvas.height = Math.max(1, Math.round(rect.height * dpr));
+          canvas.width = outW;
+          canvas.height = outH;
           var ctx = canvas.getContext('2d');
           if (!ctx) { resolve(null); return; }
-          ctx.drawImage(img, rect.left * dpr, rect.top * dpr, rect.width * dpr, rect.height * dpr, 0, 0, canvas.width, canvas.height);
-          try { resolve(canvas.toDataURL('image/png')); } catch (e) { resolve(null); }
+          ctx.drawImage(img, rect.left * dpr, rect.top * dpr, rect.width * dpr, rect.height * dpr, 0, 0, outW, outH);
+          try { console.log('[copy-ui-path-lite] screenshot cropped to ' + outW + 'x' + outH); resolve(canvas.toDataURL('image/jpeg', quality)); } catch (e) {
+            try { resolve(canvas.toDataURL('image/png')); } catch (e2) { resolve(null); }
+          }
         };
-        img.onerror = function () { resolve(null); };
+        img.onerror = function () { console.error("[copy-ui-path-lite] capture crop img onerror"); resolve(null); };
         img.src = res.dataUrl;
       });
     });
@@ -1239,6 +1256,16 @@
   if (closeAfterCopyBox) closeAfterCopyBox.checked = closeAfterCopy;
   var sepCustomInput = shadow.querySelector('#sep-custom');
   if (sepCustomInput) { sepCustomInput.value = sepCustom; }
+  var imgResoRange = shadow.querySelector('#imgreso-range');
+  var imgCompRange = shadow.querySelector('#imgcomp-range');
+  var imgResoVal = shadow.querySelector('#imgreso-val');
+  var imgCompVal = shadow.querySelector('#imgcomp-val');
+  settings.imageResolutionPct = settings.imageResolutionPct || '50';
+  settings.imageCompressionLevel = settings.imageCompressionLevel || '40';
+  if (imgResoRange) imgResoRange.value = settings.imageResolutionPct;
+  if (imgCompRange) imgCompRange.value = settings.imageCompressionLevel;
+  if (imgResoVal) imgResoVal.textContent = settings.imageResolutionPct + '%';
+  if (imgCompVal) imgCompVal.textContent = settings.imageCompressionLevel + '%';
 
   formatSelect.addEventListener('change', function() {
     formatMode = this.value;
@@ -1451,7 +1478,7 @@
     includeDOMPath: false, includeClasses: true, includeText: true,
     includeAttributes: false, includePosition: false, includeSection: false,
     includeNearby: false, includeHTML: false, includeStyles: false,
-    includeViewport: true, includeScreenshot: true, includeImageBase64: true, includeScreenshotCompact: false
+    includeViewport: true, includeScreenshot: true, includeImageBase64: false, includeScreenshotCompact: false
   };
   CONTEXT_TOGGLE_KEYS.forEach(function (key) {
     if (settings[key] === undefined && CONTEXT_TOGGLE_DEFAULTS[key] !== undefined) {
@@ -2211,6 +2238,20 @@
       renderQueue();
     });
   }
+  if (imgResoRange) {
+    imgResoRange.addEventListener('input', function () {
+      settings.imageResolutionPct = this.value;
+      if (imgResoVal) imgResoVal.textContent = this.value + '%';
+      autoSave();
+    });
+  }
+  if (imgCompRange) {
+    imgCompRange.addEventListener('input', function () {
+      settings.imageCompressionLevel = this.value;
+      if (imgCompVal) imgCompVal.textContent = this.value + '%';
+      autoSave();
+    });
+  }
   if (copyAllBtn) copyAllBtn.addEventListener('click', doCopyAll);
   if (clearBtn) clearBtn.addEventListener('click', clearQueue);
   if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () {
@@ -2234,6 +2275,7 @@
   };
   window.__ctp_multi = {
     debugCopy: function () { if (currentEl) { doCopy(true); return 'called'; } return 'no currentEl'; },
+    capture: function (el) { return captureElementScreenshot(el ? el : currentEl); },
     get: function () { return collected.map(function (it) { return it.el; }); },
     current: function () { return currentEl; },
     mode: function () { return multiMode; },

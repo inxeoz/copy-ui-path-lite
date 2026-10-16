@@ -47,8 +47,10 @@ if (browser && browser.commands && browser.commands.onCommand) {
 if (browser && browser.contextMenus) {
   function createContextMenus() {
     try {
-      browser.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
-        if (browser.runtime.lastError) { /* item already exists on reload */ }
+      browser.contextMenus.removeAll(function () {
+        browser.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
+          if (browser.runtime.lastError) { /* ignore */ }
+        });
       });
     } catch (e) {}
   }

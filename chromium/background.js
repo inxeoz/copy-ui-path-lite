@@ -51,14 +51,15 @@ if (chrome && chrome.commands && chrome.commands.onCommand) {
 
 if (chrome && chrome.contextMenus) {
   try {
-    chrome.runtime.onInstalled.addListener(function () {
-      chrome.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
-        if (chrome.runtime.lastError) { /* already exists */ }
+    function createContextMenus() {
+      chrome.contextMenus.removeAll(function () {
+        chrome.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
+          if (chrome.runtime.lastError) { /* ignore */ }
+        });
       });
-    });
-    chrome.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
-      if (chrome.runtime.lastError) { /* already exists */ }
-    });
+    }
+    chrome.runtime.onInstalled.addListener(createContextMenus);
+    createContextMenus();
   } catch (e) {}
   if (chrome.contextMenus.onClicked) {
     chrome.contextMenus.onClicked.addListener(function (info, tab) {
