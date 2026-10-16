@@ -1,5 +1,21 @@
 console.log('[copy-ui-path-lite] background loaded');
 
+// Capture listener registered first so message API stays usable even if UI APIs fail.
+chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
+  if (!msg || msg.action !== 'ctp-capture-visible') return;
+  var opts = { format: 'png' };
+  var done = function (dataUrl) {
+    if (chrome.runtime.lastError) sendResponse({ dataUrl: null, error: chrome.runtime.lastError.message });
+    else sendResponse({ dataUrl: dataUrl });
+  };
+  try {
+    chrome.tabs.captureVisibleTab(chrome.windows.WINDOW_ID_CURRENT, opts, done);
+  } catch (e) {
+    chrome.tabs.captureVisibleTab(opts, done);
+  }
+  return true;
+});
+
 // ── Inject picker into a tab ──────────────────────────────────────
 
 async function injectPicker(tabId) {
@@ -14,55 +30,41 @@ async function injectPicker(tabId) {
 
 // ── Icon click ────────────────────────────────────────────────────
 
-chrome.action.onClicked.addListener(function (tab) {
-  injectPicker(tab.id);
-});
+if (chrome && chrome.action && chrome.action.onClicked) {
+  chrome.action.onClicked.addListener(function (tab) { injectPicker(tab.id); });
+}
 
 // ── Keyboard shortcut (Ctrl+Shift+X) ─────────────────────────────
 
-chrome.commands.onCommand.addListener(function (command) {
-  console.log('[copy-ui-path-lite] command received:', command);
-  if (command === 'pick-element') {
-    chrome.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
-      if (tabs[0]) injectPicker(tabs[0].id);
-    });
-  }
-});
+if (chrome && chrome.commands && chrome.commands.onCommand) {
+  chrome.commands.onCommand.addListener(function (command) {
+    console.log('[copy-ui-path-lite] command received:', command);
+    if (command === 'pick-element') {
+      chrome.tabs.query({ active: true, currentWindow: true }).then(function (tabs) {
+        if (tabs[0]) injectPicker(tabs[0].id);
+      });
+    }
+  });
+}
 
 // ── Right-click context menu ──────────────────────────────────────
 
-chrome.runtime.onInstalled.addListener(function () {
-  chrome.contextMenus.create({
-    id: 'copy-path-lite',
-    title: 'Copy Path',
-    contexts: ['all']
-  });
-});
-try {
-  chrome.contextMenus.create({
-    id: 'copy-path-lite',
-    title: 'Copy Path',
-    contexts: ['all']
-  });
-} catch (e) {}
-
-chrome.contextMenus.onClicked.addListener(function (info, tab) {
-  if (info.menuItemId === 'copy-path-lite') {
-    injectPicker(tab.id);
+if (chrome && chrome.contextMenus) {
+  try {
+    chrome.runtime.onInstalled.addListener(function () {
+      chrome.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
+        if (chrome.runtime.lastError) { /* already exists */ }
+      });
+    });
+    chrome.contextMenus.create({ id: 'copy-path-lite', title: 'Copy Path', contexts: ['all'] }, function () {
+      if (chrome.runtime.lastError) { /* already exists */ }
+    });
+  } catch (e) {}
+  if (chrome.contextMenus.onClicked) {
+    chrome.contextMenus.onClicked.addListener(function (info, tab) {
+      if (info.menuItemId === 'copy-path-lite' && tab) {
+        injectPicker(tab.id);
+      }
+    });
   }
-});
-
-// ── Capture visible tab for an element screenshot ──────────────────
-
-chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
-  if (!msg || msg.action !== 'ctp-capture-visible') return;
-  var windowId = (sender && sender.tab && sender.tab.windowId) ? sender.tab.windowId : null;
-  var opts = { format: 'png' };
-  var done = function (dataUrl) {
-    if (chrome.runtime.lastError) sendResponse({ dataUrl: null, error: chrome.runtime.lastError.message });
-    else sendResponse({ dataUrl: dataUrl });
-  };
-  if (windowId === null) chrome.tabs.captureVisibleTab(opts, done);
-  else chrome.tabs.captureVisibleTab(windowId, opts, done);
-  return true;
-});
+}

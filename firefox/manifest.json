@@ -12,7 +12,8 @@
     "activeTab",
     "tabs",
     "clipboardWrite",
-    "contextMenus"
+    "contextMenus",
+    "<all_urls>"
   ],
   "background": {
     "scripts": [

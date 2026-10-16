@@ -575,10 +575,10 @@
   }
 
   function captureElementScreenshot(el) {
-    if (!settings.includeScreenshot || !el) return Promise.resolve(null);
+    if (!settings.includeImageBase64 || !el) return Promise.resolve(null);
     var rect = null;
     try { rect = el.getBoundingClientRect(); } catch (e) { rect = null; }
-    if (!rect || !rect.width || !rect.height) return Promise.resolve(null);
+    if (!rect || !rect.width || !rect.height) { console.log('[copy-ui-path-lite] bad rect', rect && rect.width, rect && rect.height); return Promise.resolve(null); }
     return sendMessage({ action: 'ctp-capture-visible' }).then(function (res) {
       if (!res || !res.dataUrl) {
         console.error('[copy-ui-path-lite] screenshot capture failed:', res && res.error);
@@ -594,7 +594,7 @@
           var ctx = canvas.getContext('2d');
           if (!ctx) { resolve(null); return; }
           ctx.drawImage(img, rect.left * dpr, rect.top * dpr, rect.width * dpr, rect.height * dpr, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(function (blob) { resolve(blob); }, 'image/png');
+          try { resolve(canvas.toDataURL('image/png')); } catch (e) { resolve(null); }
         };
         img.onerror = function () { resolve(null); };
         img.src = res.dataUrl;
@@ -1443,7 +1443,7 @@
     'includeUsage', 'includeSelector', 'includeDOMPath', 'includeClasses',
     'includeText', 'includeAttributes', 'includePosition', 'includeSection',
     'includeNearby', 'includeHTML', 'includeStyles', 'includeViewport',
-    'includeScreenshot', 'includeScreenshotCompact'
+    'includeScreenshot', 'includeImageBase64', 'includeScreenshotCompact'
   ];
   var CONTEXT_TOGGLE_DEFAULTS = {
     includeURL: true, includeTitle: false, includeSource: true,
@@ -1451,7 +1451,7 @@
     includeDOMPath: false, includeClasses: true, includeText: true,
     includeAttributes: false, includePosition: false, includeSection: false,
     includeNearby: false, includeHTML: false, includeStyles: false,
-    includeViewport: true, includeScreenshot: true, includeScreenshotCompact: false
+    includeViewport: true, includeScreenshot: true, includeImageBase64: true, includeScreenshotCompact: false
   };
   CONTEXT_TOGGLE_KEYS.forEach(function (key) {
     if (settings[key] === undefined && CONTEXT_TOGGLE_DEFAULTS[key] !== undefined) {
@@ -1980,14 +1980,16 @@
     // (hidePicker sets host display:none, which would strand badges + dialog.)
     if (closeAfterCopy) hidePicker();
     var shotTarget = currentEl || (collected.length ? collected[0].el : null);
-    captureElementScreenshot(shotTarget).then(function (imgBlob) {
-      return writeClipboardPayload(text, imgBlob);
-    }).then(function () {
-      showToast('Copied ' + collected.length + ' paths (' + sepStyle + ')');
-      if (copyAllBtn) copyAllBtn.textContent = 'Copied!';
-      if (copyBtn) flashBtn(copyBtn, 'Copied!');
-      setTimeout(renderQueue, 1200);
-      if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
+    captureElementScreenshot(shotTarget).then(function (dataUrl) {
+      var finalText = text;
+      if (dataUrl) finalText += '\n- Image (base64): "' + dataUrl + '"';
+      return copyToClipboard(finalText).then(function () {
+        showToast('Copied ' + collected.length + ' paths (' + sepStyle + ')');
+        if (copyAllBtn) copyAllBtn.textContent = 'Copied!';
+        if (copyBtn) flashBtn(copyBtn, 'Copied!');
+        setTimeout(renderQueue, 1200);
+        if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
+      });
     }).catch(function () {
       showToast('Clipboard failed', true);
       if (closeAfterCopy) { dialog.classList.add('closing'); setTimeout(quit, 300); }
@@ -2012,20 +2014,25 @@
     if (!stayOpen) hidePicker();
     copyBtn.textContent = 'Copied!';
     copyBtn.classList.add('copied');
-    captureElementScreenshot(currentEl).then(function (imgBlob) {
-      return writeClipboardPayload(copyText, imgBlob);
-    }).then(function () {
-      var preview = copyText.length > 50 ? copyText.slice(0, 47) + '...' : copyText;
-      showToast('Copied ' + formatMode + ': ' + preview + '  [' + pct + '%]');
-      if (stayOpen) {
-        setTimeout(function () {
-          updateCopyBtn();
-          copyBtn.classList.remove('copied');
-        }, 1200);
-      } else {
-        dialog.classList.add('closing');
-        setTimeout(quit, 300);
-      }
+    captureElementScreenshot(currentEl).then(function (dataUrl) {
+      var finalText = copyText;
+      if (dataUrl) finalText += '\n- Image (base64): "' + dataUrl + '"';
+      else if (settings.includeImageBase64) console.error('[copy-ui-path-lite] no screenshot data captured');
+      // Keep base64 payload from making the toast preview unreadable.
+      var previewText = copyText;
+      return copyToClipboard(finalText).then(function () {
+        var preview = previewText.length > 50 ? previewText.slice(0, 47) + '...' : previewText;
+        showToast('Copied ' + formatMode + ': ' + preview + '  ' + (dataUrl ? '(image included)' : (settings.includeImageBase64 ? '(no image captured)' : '')) + '  [' + pct + '%]');
+        if (stayOpen) {
+          setTimeout(function () {
+            updateCopyBtn();
+            copyBtn.classList.remove('copied');
+          }, 1200);
+        } else {
+          dialog.classList.add('closing');
+          setTimeout(quit, 300);
+        }
+      });
     }).catch(function () {
       console.error('[copy-ui-path-lite] clipboard write FAILED');
       showToast('Clipboard failed', true);
@@ -2226,6 +2233,7 @@
     toggles: function () { return settings; }
   };
   window.__ctp_multi = {
+    debugCopy: function () { if (currentEl) { doCopy(true); return 'called'; } return 'no currentEl'; },
     get: function () { return collected.map(function (it) { return it.el; }); },
     current: function () { return currentEl; },
     mode: function () { return multiMode; },
