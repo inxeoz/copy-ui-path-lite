@@ -74,12 +74,13 @@ controls the syntax colors of the path preview (`url`, `path_tid`, `ctx_key`, �
 Edit `templates/picker_ui.j2`. The backend binds to the UI by **element id** and a few
 **class hooks** — keep these and any layout works:
 
-- ids (29): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
+- ids (36): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
   `settingsPanel`, `saveState`, `path-display`, `queue-list`, `queue-count`,
   `sep-select`, `format-select`, `copyAllBtn`, `clearBtn`, `copyIdBtn`, `copyBtn`,
-  `addBtn`, `closeAfterCopy`, `multiBtn`, `quitBtn`, `stepBackBtn`, `stepNextBtn`,
-  `configBtn`, `config-checks`, `config-custom`, `opt-child`, `opt-parent`,
-  `opt-move`, `opt-settings`, `opt-info`
+  `addBtn`, `closeAfterCopy`, `multiBtn`, `multi-actions`, `quitBtn`, `stepBackBtn`,
+  `stepNextBtn`, `configBtn`, `config-checks`, `config-custom`, `opt-child`,
+  `opt-parent`, `opt-move`, `opt-settings`, `opt-info`, `opt-corner-tl`,
+  `opt-corner-tr`, `opt-corner-bl`, `opt-corner-br`
 - classes: `tab` + `data-tab` on the tab buttons, `panel` + `data-panel` on the panels,
   `active` (`#multiBtn`, settings tabs), `open` (`#dialog`, `.preview-actions`),
   `has-items` (`#queue-list`), `closing`, `frozen` (`#dialog` / `#overlay`), plus the
@@ -140,7 +141,7 @@ organised into three tabs:
 | Tab | What is in it |
 |---|---|
 | **Style** | computed-property presets, the property list, and a custom comma-separated list |
-| **Config** | path format, separator for multiple paths, close-after-copy, and which toolbar controls are shown — `to child` and `to parent` are switched independently |
+| **Config** | path format, separator for multiple paths, close-after-copy, which toolbar controls are shown — `to child` and `to parent` are switched independently — and which corner labels (`tl` / `tr` / `bl` / `br`, off by default) are drawn while hovering; the corners stay in the path either way |
 | **Path Preview** | the live path for the hovered element, the picked-path list, and the copy actions |
 
 Every picked path gets its own row with **Copy**, **Add Details** and **View Path** —

@@ -783,19 +783,30 @@
     var el = shadow.querySelector(sel);
     if (box && el) el.style.display = box.checked ? '' : 'none';
   }
-  Object.keys(TOOLBAR_TARGETS).forEach(function (id) {
+  // Every `opt-` box is remembered the same way — its id minus the prefix is
+  // the settings key — so the plumbing lives here and a caller only supplies
+  // the work its own toggle owes beyond being persisted.
+  function registerToggle(id, apply) {
     var box = shadow.querySelector('#' + id);
     if (!box) return;
     var key = id.replace('opt-', '');
-    // builds before the split stored one toggle for both walk buttons
-    if (settings[key] === undefined && settings.nav !== undefined) settings[key] = !!settings.nav;
     if (settings[key] !== undefined) box.checked = !!settings[key];
     box.addEventListener('change', function () {
       settings[key] = box.checked;
-      applyToolbarToggle(id);
+      apply();
       autoSave();
     });
-    applyToolbarToggle(id);
+    apply();
+  }
+  // builds before the split stored one toggle for both walk buttons
+  if (settings.nav !== undefined) {
+    ['opt-child', 'opt-parent'].forEach(function (id) {
+      var key = id.replace('opt-', '');
+      if (settings[key] === undefined) settings[key] = !!settings.nav;
+    });
+  }
+  Object.keys(TOOLBAR_TARGETS).forEach(function (id) {
+    registerToggle(id, function () { applyToolbarToggle(id); });
   });
 
 
@@ -805,9 +816,13 @@
   document.body.appendChild(hlEl);
 
   // Corner labels
+  var CORNER_NAMES = ['tl', 'tr', 'bl', 'br'];
   var cornerLabels = [];
-  ['tl', 'tr', 'bl', 'br'].forEach(function(name) {
+  CORNER_NAMES.forEach(function(name) {
     var el = document.createElement('div');
+    // No id on these divs — the classes are the only handle on them, and
+    // what the corner boxes below (and the test harness) look for.
+    el.className = 'ctp-corner ctp-corner-' + name;
     el.style.cssText = 'position:fixed;z-index:2147483646;font:11px/1 SF Mono,Cascadia Code,Fira Code,Menlo,monospace;color:#1E3A5F;background:#FFD700;padding:2px 5px;border-radius:3px;pointer-events:none;white-space:nowrap;display:none;';
     document.body.appendChild(el);
     cornerLabels.push(el);
@@ -816,6 +831,19 @@
   var cornerTr = cornerLabels[1];
   var cornerBl = cornerLabels[2];
   var cornerBr = cornerLabels[3];
+
+  // ── Corner-label toggles ────────────────────────────────────────
+  // One box per corner, starting off: nothing is drawn until a corner is
+  // switched on, and each box then gates only its own label in
+  // updateCornerLabels() below. The corner block inside the path is a single
+  // PART.CORNER segment, so it keeps listing all four corners either way.
+  CORNER_NAMES.forEach(function (name) {
+    registerToggle('opt-corner-' + name, function () {
+      // updateUI() early-returns for the element already hovered, so redraw
+      // the labels straight away rather than waiting for the pointer to move.
+      if (currentEl) updateCornerLabels(currentEl.getBoundingClientRect());
+    });
+  });
 
   // Center z-index label
   var centerLabel = document.createElement('div');
@@ -837,6 +865,12 @@
   var SIZE_THRESHOLD_W = 100;
   var SIZE_THRESHOLD_H = 40;
 
+  // A corner is drawn only when its `corner-<name>` setting is on — an absent
+  // key means off, so the labels stay hidden until they are asked for.
+  function cornerOn(name) {
+    return !!settings['corner-' + name];
+  }
+
   function updateCornerLabels(rect) {
     if (rect.width < SIZE_THRESHOLD_W || rect.height < SIZE_THRESHOLD_H) {
       hideCornerLabels();
@@ -854,22 +888,22 @@
     cornerTl.textContent = 'tl[' + tlX + ',' + tlY + ']';
     cornerTl.style.left = Math.max(2, rect.left - 4) + 'px';
     cornerTl.style.top = Math.max(2, rect.top - 22) + 'px';
-    cornerTl.style.display = 'block';
+    cornerTl.style.display = cornerOn('tl') ? 'block' : 'none';
 
     cornerTr.textContent = 'tr[' + trX + ',' + trY + ']';
     cornerTr.style.right = Math.max(2, window.innerWidth - rect.right + 4) + 'px';
     cornerTr.style.top = Math.max(2, rect.top - 22) + 'px';
-    cornerTr.style.display = 'block';
+    cornerTr.style.display = cornerOn('tr') ? 'block' : 'none';
 
     cornerBl.textContent = 'bl[' + blX + ',' + blY + ']';
     cornerBl.style.left = Math.max(2, rect.left - 4) + 'px';
     cornerBl.style.top = (rect.bottom + 4) + 'px';
-    cornerBl.style.display = 'block';
+    cornerBl.style.display = cornerOn('bl') ? 'block' : 'none';
 
     cornerBr.textContent = 'br[' + brX + ',' + brY + ']';
     cornerBr.style.right = Math.max(2, window.innerWidth - rect.right + 4) + 'px';
     cornerBr.style.top = (rect.bottom + 4) + 'px';
-    cornerBr.style.display = 'block';
+    cornerBr.style.display = cornerOn('br') ? 'block' : 'none';
   }
 
   function hideCornerLabels() {
