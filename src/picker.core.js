@@ -596,6 +596,524 @@
 
   document.documentElement.appendChild(host);
 
+  // ── MAIN-world bridge ──────────────────────────────────────────
+  // Framework internals (React fiber, Vue component, ...) live in the page's
+  // own JavaScript world. A content script cannot see them, so we inject a
+  // small collector into the main world and talk to it with DOM events.
+  var mainBridgeInjected = false;
+  function injectMainBridge() {
+    if (mainBridgeInjected) return;
+    mainBridgeInjected = true;
+    var s = document.createElement('script');
+    s.textContent = [
+      'window.__ctpCollectContext = function(el) {',
+      '  try {',
+      '    var out = { framework: null, file: null, line: null, componentChain: null, usage: null };',
+      '    // React',
+      '    var node = el;',
+      '    var fiber = null, tries = 0;',
+      '    while (node && !fiber && tries < 6) {',
+      '      for (var k in node) {',
+      '        if (/^__react(Fiber|InternalInstance)\\$/.test(k)) { fiber = node[k]; break; }',
+      '      }',
+      '      if (!fiber && node.parentElement) node = node.parentElement; tries++;',
+      '    }',
+      '    if (fiber) {',
+      '      out.framework = "React";',
+      '      var f = fiber, chain = [], owners = f._debugOwner || f._debugStack; ',
+      '      // collect owners',
+      '      var o = f._debugOwner;',
+      '      var names = [];',
+      '      while (o) { var n = (o.type && (o.type.displayName || o.type.name)) || o.name; if (n) names.push(n); o = o._debugOwner; }',
+      '      if (names.length) names.reverse();',
+      '      names.push((f.type && (f.type.displayName || f.type.name)) || f.type || (el && el.tagName && el.tagName.toLowerCase()));',
+      '      if ((el && el.tagName)) names.push(el.tagName.toLowerCase());',
+      '      // de-dupe adjacent',
+      '      var dedup = []; names.forEach(function(n){ if (!dedup.length || dedup[dedup.length-1] !== n) dedup.push(n); });',
+      '      out.componentChain = dedup.join(" > ");',
+      '      var src = f._debugSource;',
+      '      if (src && src.fileName) { out.file = src.fileName; out.line = src.lineNumber || src.line || null; }',
+      '      if (!out.file && typeof f._debugStack === "string") {',
+      '        var m = f._debugStack.match(/\\(([^)]+):(\\d+):(\\d+)\\)/);',
+      '        if (m) { out.file = m[1]; out.line = parseInt(m[2],10); }',
+      '      }',
+      '      // usage: parent owner',
+      '      if (f._debugOwner) {',
+      '        var po = f._debugOwner;',
+      '        var pn = (po.type && (po.type.displayName || po.type.name)) || po.name;',
+      '        var ps = po._debugSource;',
+      '        if (pn) out.usage = "<" + pn + "> at @" + (ps && ps.fileName ? ps.fileName : "") + (ps && (ps.lineNumber||ps.line) ? ":" + (ps.lineNumber||ps.line) : "");',
+      '      }',
+      '    }',
+      '    // Vue',
+      '    if (!out.file) {',
+      '      var vNode = el;',
+      '      var triesV = 0, inst = null;',
+      '      while (vNode && !inst && triesV < 6) {',
+      '        if (vNode.__vueParentComponent) inst = vNode.__vueParentComponent;',
+      '        else if (vNode.__vue__) inst = vNode.__vue__; ',
+      '        if (!inst && vNode.parentElement) vNode = vNode.parentElement; triesV++;',
+      '      }',
+      '      if (inst) {',
+      '        out.framework = "Vue";',
+      '        if (inst.type && inst.type.__file) { out.file = inst.type.__file; }',
+      '        if (inst.type && (inst.type.name || inst.type.__name)) out.componentChain = (inst.type.name || inst.type.__name);',
+      '        // ancestors',
+      '        var cur = inst, chainV = [];',
+      '        while (cur) {',
+      '          var nm = cur.type && (cur.type.name || cur.type.__name || cur.type.displayName);',
+      '          if (nm) chainV.unshift(nm);',
+      '          cur = cur.parent;',
+      '        }',
+      '        if (chainV.length) { chainV.push(el && el.tagName && el.tagName.toLowerCase()); out.componentChain = chainV.join(" > "); }',
+      '        if (inst.parent && inst.parent.type) {',
+      '          var pnm = inst.parent.type.name || inst.parent.type.__name || inst.parent.type.displayName;',
+      '          var pf = inst.parent.type && inst.parent.type.__file;',
+      '          if (pnm) out.usage = "<" + pnm + "> at @" + (pf || "");',
+      '        }',
+      '      }',
+      '    }',
+      '    // Svelte',
+      '    if (!out.file) {',
+      '      var sNode = el, triesS = 0, meta = null;',
+      '      while (sNode && !meta && triesS < 6) {',
+      '        if (sNode.__svelte_meta) meta = sNode.__svelte_meta;',
+      '        if (!meta && sNode.parentElement) sNode = sNode.parentElement; triesS++;',
+      '      }',
+      '      if (meta && meta.loc) {',
+      '        out.framework = "Svelte";',
+      '        out.file = meta.loc.file;',
+      '        out.line = meta.loc.line;',
+      '        if (meta.loc.component) out.componentChain = String(meta.loc.component);',
+      '      }',
+      '    }',
+      '    // Angular',
+      '    if (!out.file && window.ng && typeof window.ng.getOwningComponent === "function") {',
+      '      var comp = null;',
+      '      try { comp = window.ng.getOwningComponent(el); } catch(e) {}',
+      '      if (comp) {',
+      '        out.framework = "Angular";',
+      '        var cn = (comp.constructor && comp.constructor.name) || "Component";',
+      '        out.componentChain = cn;',
+      '        // try debug info',
+      '        try {',
+      '          var debug = comp.constructor && (comp.constructor.ɵcmp || comp.constructor.ɵcmp.debugInfo);',
+      '          if (debug && debug.fileName) out.file = debug.fileName;',
+      '          if (debug && debug.lineNumber) out.line = debug.lineNumber;',
+      '        } catch(e){}',
+      '      }',
+      '    }',
+      '    // Sentry attributes (production)',
+      '    if (!out.file) {',
+      '      var sentryNode = el, triesN = 0;',
+      '      while (sentryNode && triesN < 6) {',
+      '        if (sentryNode.getAttribute && sentryNode.getAttribute("data-sentry-source-file")) {',
+      '          out.framework = "Sentry";',
+      '          out.file = sentryNode.getAttribute("data-sentry-source-file");',
+      '          out.componentChain = sentryNode.getAttribute("data-sentry-component");',
+      '          break;',
+      '        }',
+      '        if (sentryNode.parentElement) sentryNode = sentryNode.parentElement; triesN++;',
+      '      }',
+      '    }',
+      '    return out;',
+      '  } catch (e) { return null; }',
+      '};',
+      'window.addEventListener("ctp:get-context", function(e) {',
+      '  var d = (e && e.detail) || {};',
+      '  var r = (window.__ctpCollectContext && d.el) ? window.__ctpCollectContext(d.el) : null;',
+      '  window.dispatchEvent(new CustomEvent("ctp:context-result", { detail: { id: d.id, result: r } }));',
+      '});'
+    ].join('\n');
+    document.documentElement.appendChild(s);
+    s.remove();
+  }
+  injectMainBridge();
+
+  function requestMainContext(el) {
+    return new Promise(function (resolve) {
+      var id = 'ctp_' + Math.random().toString(36).slice(2);
+      function handler(e) {
+        var d = e && e.detail;
+        if (!d || d.id !== id) return;
+        window.removeEventListener('ctp:context-result', handler);
+        resolve(d.result || null);
+      }
+      window.addEventListener('ctp:context-result', handler);
+      try { window.dispatchEvent(new CustomEvent('ctp:get-context', { detail: { id: id, el: el } })); }
+      catch (err) { resolve(null); }
+      setTimeout(function () { window.removeEventListener('ctp:context-result', handler); resolve(null); }, 200);
+    });
+  }
+
+  // ── Context cache ───────────────────────────────────────────────
+  var contextCache = new Map();
+
+  function ensureContext(el) {
+    if (!contextCache.has(el)) {
+      contextCache.set(el, {
+        source: null,
+        fingerprint: null,
+        searched: false
+      });
+    }
+    var c = contextCache.get(el);
+    if (!c.fingerprint) c.fingerprint = buildFingerprint(el);
+    return c;
+  }
+
+  function toProjectRelative(p) {
+    if (!p) return null;
+    var s = String(p);
+    try {
+      if (/^https?:\/\//i.test(s)) {
+        var u = new URL(s);
+        s = u.pathname || s;
+      }
+    } catch (e) {}
+    s = s.replace(/\\\\/g, '/');
+    s = s.split('?')[0].split('#')[0];
+    var idx = s.lastIndexOf('/src/');
+    if (idx >= 0) return s.slice(idx + 1);
+    idx = s.lastIndexOf('src/');
+    if (idx >= 0 && (idx === 0 || s.charAt(idx - 1) === '/')) return s.slice(idx);
+    return s.replace(/^\/+/, '');
+  }
+
+  function collectBuildPluginSource(el) {
+    var node = el;
+    for (var depth = 0; depth < 8 && node; depth++) {
+      if (node.getAttribute) {
+        var sentryFile = node.getAttribute('data-sentry-source-file');
+        if (sentryFile) {
+          return {
+            framework: 'Sentry',
+            file: sentryFile,
+            line: parseFileLineNum(node.getAttribute('data-sentry-line') || node.getAttribute('data-sentry-source-line')),
+            componentChain: node.getAttribute('data-sentry-component'),
+            usage: null
+          };
+        }
+        var vi = node.getAttribute('data-v-inspector');
+        if (vi) {
+          var pl = parseFileLine(vi);
+          if (pl) return { framework: 'Vue', file: pl.file, line: pl.line, componentChain: null, usage: null };
+        }
+        var rel = node.getAttribute('data-inspector-relative-path');
+        if (rel) {
+          var ln = node.getAttribute('data-inspector-line') || node.getAttribute('data-inspector-row') || node.getAttribute('data-line');
+          return { framework: 'React', file: rel, line: ln ? parseInt(ln, 10) : null, componentChain: null, usage: null };
+        }
+        var astro = node.getAttribute('data-astro-source-file');
+        if (astro) {
+          var aln = node.getAttribute('data-astro-source-line');
+          return { framework: 'Astro', file: astro, line: aln ? parseInt(aln, 10) : null, componentChain: null, usage: null };
+        }
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  function parseFileLine(str) {
+    if (!str) return null;
+    var m = String(str).match(/^(.*?):(\\d+)(?::\\d+)?$/);
+    if (m) return { file: m[1], line: parseInt(m[2], 10) };
+    return { file: String(str), line: null };
+  }
+  function parseFileLineNum(str) {
+    if (!str) return null;
+    var m = String(str).match(/(\\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  function candidateStrings(el) {
+    var out = [];
+    var text = (el.textContent || '').trim().replace(/\s+/g, ' ');
+    if (text && text.length >= 4 && text.length <= 80) out.push(text);
+    var aria = el.getAttribute && el.getAttribute('aria-label');
+    if (aria && aria.trim().length >= 3) out.push(aria.trim());
+    var tid = getTestId(el);
+    if (tid && tid.value) out.push(String(tid.value));
+    var id = el.id;
+    if (id && id.length >= 3) out.push(String(id));
+    var classes = (el.className && typeof el.className === 'string') ? el.className.trim().split(/\\s+/) : [];
+    if (classes.length) {
+      var stable = classes[0];
+      if (stable && stable.length >= 4 && !/^[a-z]{1,2}-?[a-f0-9]{4,}$/i.test(stable)) out.push(stable);
+    }
+    // de-dupe
+    var seen = {};
+    return out.filter(function (s) { if (seen[s]) return false; seen[s] = true; return true; });
+  }
+
+  var scriptTextCache = {};
+  function getSameOriginScripts() {
+    var set = {};
+    var urls = [];
+    function add(u) {
+      try {
+        var abs = new URL(u, location.href).href;
+        if (new URL(abs).origin !== location.origin) return;
+        if (set[abs]) return;
+        set[abs] = true;
+        urls.push(abs);
+      } catch (e) {}
+    }
+    document.querySelectorAll('script[src]').forEach(function (s) { add(s.src); });
+    try {
+      performance.getEntriesByType('resource').forEach(function (r) {
+        if (r.initiatorType === 'script' || /\\.js(\\?|$)/.test(r.name)) add(r.name);
+      });
+    } catch (e) {}
+    return urls;
+  }
+
+  function fetchScriptText(url) {
+    if (scriptTextCache[url]) return scriptTextCache[url];
+    var p = fetch(url, { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error('bad status');
+      return r.text();
+    }).catch(function () { return null; });
+    scriptTextCache[url] = p;
+    return p;
+  }
+
+  function getScriptEntries() {
+    var entries = [];
+    var seen = {};
+    getSameOriginScripts().forEach(function (u) {
+      if (seen[u]) return; seen[u] = true;
+      entries.push({ url: u, textPromise: fetchScriptText(u) });
+    });
+    document.querySelectorAll('script:not([src])').forEach(function (s, i) {
+      var u = location.href + '#inline-' + i;
+      if (seen[u]) return; seen[u] = true;
+      entries.push({ url: u, textPromise: Promise.resolve(s.textContent || '') });
+    });
+    return entries;
+  }
+
+  function runSourceSearch(el) {
+    var c = ensureContext(el);
+    if (c.source && c.source.file) return Promise.resolve(c.source);
+    var cands = candidateStrings(el);
+    if (!cands.length) return Promise.resolve(null);
+    var entries = getScriptEntries();
+    var urls = entries.map(function (e) { return e.url; });
+    return Promise.all(entries.map(function (e) { return e.textPromise; })).then(function (texts) {
+      var best = null; // {file, line, count}
+      for (var ci = 0; ci < cands.length; ci++) {
+        var cand = cands[ci];
+        var fileCount = 0;
+        var firstMatch = null;
+        for (var i = 0; i < entries.length; i++) {
+          var t = texts[i];
+          if (!t) continue;
+          if (t.indexOf(cand) === -1) continue;
+          fileCount++;
+          if (!firstMatch) {
+            var idx = t.indexOf(cand);
+            var line = t.slice(0, idx).split(/\n/).length;
+            firstMatch = { url: urls[i], line: line };
+          }
+        }
+        if (fileCount > 0 && fileCount <= 5) {
+          if (!best || fileCount < best.count) {
+            best = { url: firstMatch.url, line: firstMatch.line, count: fileCount };
+          }
+        }
+      }
+      if (best) {
+        var src = { framework: 'Search', file: best.url, line: best.line, componentChain: null, usage: null };
+        // store raw url; normalization later
+        c.source = src;
+        // mark searched
+        c.searched = true;
+      } else {
+        c.searched = true;
+      }
+      return c.source;
+    });
+  }
+
+  function scheduleSourceSearch(el) {
+    ensureContext(el);
+    runSourceSearch(el);
+    setTimeout(function () { var c = contextCache.get(el); if (c && !(c.source && c.source.file)) runSourceSearch(el); }, 500);
+    setTimeout(function () { var c = contextCache.get(el); if (c && !(c.source && c.source.file)) runSourceSearch(el); }, 1500);
+  }
+
+  async function collectSource(el) {
+    var c = ensureContext(el);
+    // Layer 1 main bridge
+    var info = null;
+    try { info = await requestMainContext(el); } catch (e) { info = null; }
+    if (info) {
+      if (!c.source) c.source = { framework: null, file: null, line: null, componentChain: null, usage: null };
+      if (info.framework) c.source.framework = info.framework;
+      if (info.file) c.source.file = info.file;
+      if (info.line) c.source.line = info.line;
+      if (info.componentChain) c.source.componentChain = info.componentChain;
+      if (info.usage) c.source.usage = info.usage;
+      if (c.source.file) return c.source;
+    }
+    // Layer 2 build plugin attrs (sync)
+    var bps = collectBuildPluginSource(el);
+    if (bps && bps.file) {
+      c.source = bps;
+      return c.source;
+    }
+    // Layer 3 scheduled (async) – kick off
+    scheduleSourceSearch(el);
+    return c.source;
+  }
+
+  function engineSourceLine(src) {
+    if (!src || !src.file) return '- Source: not found. Use the selector and fingerprint to search.';
+    var path = src.file;
+    if (path.indexOf('#inline-') === -1) {
+      var rel = toProjectRelative(path);
+      if (rel && rel.length) path = rel;
+    }
+    if (src.line) return '- Source: @' + path + ':' + src.line;
+    return '- Source: @' + path;
+  }
+
+  // ── Fingerprint ─────────────────────────────────────────────────
+  function buildFingerprint(el) {
+    var rect = el.getBoundingClientRect();
+    var cls = (el.className && typeof el.className === 'string') ? el.className.trim().split(/\\s+/).filter(Boolean) : [];
+    var text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 200);
+    // selector
+    var selector = '';
+    try { selector = getSelectorPath(el, 'css'); } catch (e) { selector = el.tagName.toLowerCase(); }
+    var domPath = '';
+    try { domPath = getDomPath(el); } catch (e) { domPath = selector; }
+    // attributes
+    var attrNames = ['role', 'aria-label', 'name', 'type', 'href', 'alt', 'title', 'data-testid'];
+    var attrs = [];
+    attrNames.forEach(function (a) {
+      var v = el.getAttribute && el.getAttribute(a);
+      if (v) attrs.push(a + '="' + String(v).slice(0, 80) + '"');
+    });
+    // nearby
+    var prevText = '', nextText = '';
+    try {
+      if (el.previousElementSibling) prevText = (el.previousElementSibling.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+      if (el.nextElementSibling) nextText = (el.nextElementSibling.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    } catch (e) {}
+    // section
+    var section = '';
+    try {
+      var landmark = el.closest('section, article, form, nav, header, footer');
+      if (landmark) {
+        var h = landmark.querySelector('h1,h2,h3,h4,h5,h6');
+        if (h) section = (h.textContent || '').trim().slice(0, 80);
+        else if (landmark.getAttribute('aria-label')) section = landmark.getAttribute('aria-label');
+        else if (landmark.getAttribute('aria-labelledby')) {
+          var labeled = document.getElementById(landmark.getAttribute('aria-labelledby'));
+          if (labeled) section = (labeled.textContent || '').trim().slice(0, 80);
+        }
+      }
+    } catch (e) {}
+    // computed styles (non-default subset)
+    var styleProps = ['display', 'position', 'background-color', 'color', 'font-size', 'font-family', 'border-radius', 'margin', 'padding', 'width', 'height', 'z-index'];
+    var styles = [];
+    try {
+      var cs = window.getComputedStyle(el);
+      var defaults = { display: 'inline', position: 'static' };
+      styleProps.forEach(function (p) {
+        var v = cs.getPropertyValue(p);
+        if (v && v !== 'none' && v !== 'auto' && v !== 'normal' && v !== '0px' && v !== 'rgba(0, 0, 0, 0)') {
+          styles.push(p + ': ' + v);
+        }
+      });
+    } catch (e) {}
+    var html = '';
+    try { html = el.outerHTML.slice(0, 200); } catch (e) {}
+    return {
+      selector: selector,
+      domPath: domPath,
+      text: text,
+      classes: cls.join(' '),
+      attrs: attrs.join(' '),
+      position: Math.round(rect.width) + 'x' + Math.round(rect.height) + ' at (' + Math.round(rect.left) + ', ' + Math.round(rect.top) + ')',
+      section: section,
+      nearby: 'before it "' + prevText + '", after it "' + nextText + '"',
+      prevText: prevText,
+      nextText: nextText,
+      html: html,
+      styles: styles.join('; '),
+      viewport: window.innerWidth + 'x' + window.innerHeight,
+      title: document.title
+    };
+  }
+
+  function getDomPath(el) {
+    var parts = [];
+    var cur = el;
+    var depth = 0;
+    while (cur && cur !== document.documentElement && depth < 25) {
+      parts.unshift(cur.tagName.toLowerCase());
+      if (cur.parentElement) cur = cur.parentElement;
+      else {
+        var r = cur.getRootNode ? cur.getRootNode() : null;
+        if (r && r instanceof ShadowRoot && r.host) { parts.unshift('{shadow}'); cur = r.host; }
+        else break;
+      }
+      depth++;
+    }
+    parts.unshift('html');
+    return parts.join(' > ');
+  }
+
+  function buildContextOutput(el) {
+    var c = ensureContext(el);
+    if (!c.fingerprint) c.fingerprint = buildFingerprint(el);
+    var fp = c.fingerprint;
+    var src = c.source;
+    var inc = function (k) { return settings[k] !== false; };
+    var lines = [];
+    // Only include the Source line when a source file was actually found.
+    if (inc('includeSource') && src && src.file) lines.push(engineSourceLine(src));
+    // Details (annotations) are included only when they exist for this element.
+    try {
+      var full = getSelectorPath(el, formatMode);
+      var ds = notesByPath[full] || [];
+      if (ds.length) lines.push('- Details: ' + ds.join('; '));
+    } catch (e) {}
+    if (inc('includeComponentChain') && src && src.componentChain) {
+      var fw = src.framework || 'Component';
+      lines.push('- ' + fw + ' component: ' + src.componentChain);
+    }
+    if (inc('includeUsage') && src && src.usage) lines.push('- Rendered inside: ' + src.usage);
+    if (inc('includeSelector')) lines.push('- Selector: ' + fp.selector);
+    if (inc('includeDOMPath')) lines.push('- DOM path: ' + fp.domPath);
+    if (inc('includeClasses') && fp.classes) lines.push('- Classes: ' + fp.classes);
+    if (inc('includeText')) lines.push('- Text: "' + fp.text + '"');
+    if (inc('includeAttributes') && fp.attrs) lines.push('- Attributes: ' + fp.attrs);
+    if (inc('includePosition')) lines.push('- Position: ' + fp.position);
+    if (inc('includeSection') && fp.section) lines.push('- Section: "' + fp.section + '"');
+    if (inc('includeNearby')) lines.push('- Nearby: ' + fp.nearby);
+    if (inc('includeHTML') && fp.html) lines.push('- HTML: ' + fp.html);
+    if (inc('includeStyles') && fp.styles) lines.push('- Computed styles: ' + fp.styles);
+    if (inc('includeViewport')) lines.push('- Viewport: ' + fp.viewport);
+    if (inc('includeTitle')) lines.push('- Page title: ' + fp.title);
+    // URL is mandatory even if the (disabled) toggle were off.
+    lines.push('- Page: ' + location.href);
+    return lines.join('\n');
+  }
+
+  function elLabel(el) {
+    var tag = el.tagName.toLowerCase();
+    var text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    return tag + (text ? ' "' + text + '"' : '');
+  }
+
+  // Monitor hover: collect source lazily
+  // (called below when wiring)
+
   var overlay = shadow.querySelector('#overlay');
   var ocean = shadow.querySelector('#ocean');
   var island = shadow.querySelector('#island');
@@ -845,6 +1363,37 @@
     });
   });
 
+  // ── Context-path toggles ────────────────────────────────────────
+  // Per-field customization from the context path plan. Keys match the toggle
+  // names in the plan; ids in the UI are `opt-<key>`.
+  var CONTEXT_TOGGLE_KEYS = [
+    'includeURL', 'includeTitle', 'includeSource', 'includeComponentChain',
+    'includeUsage', 'includeSelector', 'includeDOMPath', 'includeClasses',
+    'includeText', 'includeAttributes', 'includePosition', 'includeSection',
+    'includeNearby', 'includeHTML', 'includeStyles', 'includeViewport',
+    'includeScreenshot', 'includeScreenshotCompact'
+  ];
+  var CONTEXT_TOGGLE_DEFAULTS = {
+    includeURL: true, includeTitle: false, includeSource: true,
+    includeComponentChain: true, includeUsage: false, includeSelector: true,
+    includeDOMPath: false, includeClasses: true, includeText: true,
+    includeAttributes: false, includePosition: false, includeSection: false,
+    includeNearby: false, includeHTML: false, includeStyles: false,
+    includeViewport: true, includeScreenshot: true, includeScreenshotCompact: false
+  };
+  CONTEXT_TOGGLE_KEYS.forEach(function (key) {
+    if (settings[key] === undefined && CONTEXT_TOGGLE_DEFAULTS[key] !== undefined) {
+      settings[key] = CONTEXT_TOGGLE_DEFAULTS[key];
+    }
+  });
+  // URL is mandatory: it can never be off.
+  settings.includeURL = true;
+  CONTEXT_TOGGLE_KEYS.forEach(function (key) {
+    registerToggle('opt-' + key, function () { /* value lives in settings */ });
+  });
+  var urlToggle = shadow.querySelector('#opt-includeURL');
+  if (urlToggle) { urlToggle.checked = true; urlToggle.disabled = true; }
+
   // Center z-index label
   var centerLabel = document.createElement('div');
   centerLabel.style.cssText = 'position:fixed;z-index:2147483646;font:12px/1 SF Mono,Cascadia Code,Fira Code,Menlo,monospace;color:#1E3A5F;background:#FFD700;padding:2px 6px;border-radius:4px;pointer-events:none;display:none;';
@@ -941,6 +1490,14 @@
   function updateUI(el) {
     if (!el || el === currentEl) return;
     currentEl = el;
+    // Kick off layered source resolution (framework -> build plugin -> search)
+    // and re-prove after source maps arrive late.
+    try {
+      ensureContext(el);
+      collectSource(el);
+      setTimeout(function () { if (contextCache.has(el)) collectSource(el); }, 500);
+      setTimeout(function () { if (contextCache.has(el)) collectSource(el); }, 1500);
+    } catch (e) {}
     var rect = el.getBoundingClientRect();
     var vw = window.innerWidth;
     var vh = window.innerHeight;
@@ -1310,6 +1867,14 @@
   }
 
   function buildMultiOutput() {
+    var isContextMode = (formatMode === 'auto' || formatMode === 'context');
+    if (isContextMode) {
+      return collected.map(function (item, idx) {
+        try {
+          return '## ' + (idx + 1) + '. Element: ' + elLabel(item.el) + '\n\n' + buildContextOutput(item.el);
+        } catch (e) { return '## ' + (idx + 1) + '. Element: (detached)'; }
+      }).join('\n\n');
+    }
     var paths = collected.map(function (item) {
       try { return getSelectorPath(item.el, formatMode); } catch (e) { return '(detached)'; }
     });
@@ -1349,7 +1914,9 @@
     var zVal = getZ(currentEl);
     var selector = getSelectorPath(currentEl, formatMode);
     var isContextMode = (formatMode === 'auto' || formatMode === 'context');
-    var copyText = isContextMode ? buildPathData(currentEl, selector, zVal).toText() : selector;
+    var copyText = isContextMode
+      ? ('## 1. Element: ' + elLabel(currentEl) + '\n\n' + buildContextOutput(currentEl))
+      : selector;
     var pct = calcTestidPercent(currentEl);
     console.log('[copy-ui-path-lite] ──────────────────────────────────────');
     console.log('[copy-ui-path-lite] COPIED TO CLIPBOARD:');
@@ -1555,6 +2122,13 @@
   renderQueue();
   updateAddBtn();
   updateCopyBtn();
+  window.__ctp_context = {
+    build: buildContextOutput,
+    ensure: ensureContext,
+    cache: contextCache,
+    collect: collectSource,
+    toggles: function () { return settings; }
+  };
   window.__ctp_multi = {
     get: function () { return collected.map(function (it) { return it.el; }); },
     mode: function () { return multiMode; },

@@ -595,10 +595,528 @@
   // ── UI markup ──────────────────────────────────────────────────────
   // Generated from templates/picker_ui.j2 + themes/<name>.json.
   // Edit the template/theme and run `make ui` — never edit this line by hand.
-  tpl.innerHTML = /*__CTP_UI__*/"<style>\n  /* Design tokens. Declared on real shadow-tree elements \u2014 `:root` matches\n     nothing inside a shadow root, so it must not be used here. */\n  #dialog, #overlay {\n    --bg: #87ceeb; --ink: #0f172a; --panel: #ffffff;\n    --line: #5aa9d6; --soft: #d7e0ea; --accent: #0f172a;\n    --radius: 12px; --shadow: 0 8px 24px rgba(15,23,42,.18);\n    --row-bg: #f8fafc; --row-border: #d7e0ea;\n    --ghost-bg: #f8fafc; --ghost-border: #d7e0ea; --ghost-ink: #334155;\n    --input-bg: #f8fafc; --input-border: #d7e0ea;\n    --badge-bg: #0f172a; --badge-ink: #ffffff;\n    --muted: #64748b; --faint: #94a3b8; --code: #0f172a;\n    --ok: #16a34a; --err: #b42318;\n    --mono: ui-monospace,Menlo,monospace;\n  }\n  * { box-sizing: border-box; }\n\n  #overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; cursor: crosshair; pointer-events: auto; fill: rgba(15,23,42,0.35); }\n  #ocean { fill: rgba(0, 0, 0, .12); }\n  #island { fill: rgba(15,23,42,0.12); stroke: #0f172a; stroke-width: 2; }\n  #overlay.frozen { cursor: default; }\n\n  /* \u2500\u2500 toolbox shell \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  #dialog {\n    position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: calc(100vw - 40px);\n    font-family: system-ui,-apple-system,Segoe UI,sans-serif; font-size: 13px; line-height: 1.3; color: var(--ink);\n    pointer-events: auto; z-index: 2147483647;\n  }\n  #dialog.closing { animation: ctp-fadeOut .25s ease forwards; }\n  #dialog.frozen .box { border-color: var(--ok); }\n  @keyframes ctp-fadeOut { from { opacity: 1 } to { opacity: 0; transform: translateY(-8px) } }\n\n  /* \u2500\u2500 toolbar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .box { width: 100%; height: 52px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); cursor: move; user-select: none; }\n  .tool.open .box { border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; }\n  .box button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .55); color: var(--ink); cursor: pointer; flex: none; font: inherit; }\n  .box button:hover { background: rgba(255, 255, 255, .85); }\n  .box button.active { background: var(--accent); color: #ffffff; }\n  .box button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }\n  .box .copy { flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--accent); color: #ffffff; font-weight: 700; font-size: 12px; cursor: pointer; }\n  .box .copy:hover { background: #1e293b; }\n  #addBtn { font-size: 18px; font-weight: 700; line-height: 1; }\n  .box button:disabled { opacity: .4; cursor: not-allowed; }\n  .box button:disabled:hover { background: rgba(255, 255, 255, .55); }\n\n  /* \u2500\u2500 settings \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  /* The panel floats above the bar. A fixed auto-height box keeps its top edge\n     when it grows, so the settings section must be out of flow \u2014 otherwise the\n     panel opens off the bottom of the viewport. */\n  .settings { position: absolute; bottom: 100%; left: 0; right: 0; width: 100%; max-height: calc(100vh - 96px); overflow: auto; margin: 0; background: var(--panel); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; box-shadow: var(--shadow); padding: 14px 16px; text-align: left; font-family: system-ui,-apple-system,Segoe UI,sans-serif; }\n  .tool.open .box { border-radius: 0 0 var(--radius) var(--radius); }\n  .settings[hidden] { display: none; }\n  .settings h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; justify-content: space-between; }\n  .save-state { font-size: 10px; font-weight: 400; color: var(--ok); }\n  .settings .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft); padding-bottom: 8px; }\n  .settings .tab { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }\n  .settings .tab:hover { color: var(--ghost-ink); background: var(--ghost-bg); }\n  .settings .tab.active { color: var(--ink); background: var(--ghost-bg); border-color: var(--soft); font-weight: 600; }\n  .panel { min-height: 118px; }\n  .panel[hidden] { display: none; }\n\n  /* \u2500\u2500 style panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }\n  .settings .chip { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 11.5px; white-space: nowrap; cursor: pointer; }\n  .settings .chip:hover { background: var(--row-bg); border-color: var(--ghost-border); }\n  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; max-height: 150px; overflow: auto; margin-bottom: 12px; padding-right: 2px; font-size: 12px; color: var(--ghost-ink); }\n  .checks label { display: flex; align-items: center; gap: 7px; cursor: pointer; }\n  .checks input { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }\n  .custom-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }\n  .settings textarea { width: 100%; min-height: 44px; padding: 6px 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--ink); font-family: var(--mono); font-size: 11px; resize: vertical; }\n  .settings textarea:focus { outline: none; border-color: var(--faint); }\n\n  /* \u2500\u2500 path / output / toolbar panels \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--ghost-ink); }\n  .row select { width: 150px; height: 28px; padding: 0 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }\n  .row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }\n  .row input[type=\"checkbox\"] { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }\n\n  .settings .btn { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 28px; padding: 0 12px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }\n  .settings .btn:hover { background: var(--row-bg); }\n  .settings .btn.save { background: var(--accent); color: #ffffff; border-color: var(--accent); font-weight: 700; }\n  .settings .btn.save:hover { background: #1e293b; }\n  .settings .btn:disabled { opacity: .45; cursor: not-allowed; }\n  .settings .btn.full { width: 100%; margin-top: 10px; }\n  .side-div { border-top: 1px solid var(--soft); margin: 6px 0; }\n\n  /* \u2500\u2500 path preview panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .settings .path-text { flex: 1; min-width: 0; min-height: 28px; display: flex; align-items: center; padding: 4px 8px; border: 1px solid var(--soft); border-radius: 6px; background: var(--ghost-bg); color: var(--code); font-family: var(--mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n  #path-display { white-space: pre-wrap; overflow: auto; max-height: 96px; align-items: flex-start; line-height: 1.45; }\n  .settings .preview-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow: auto; margin: 8px 0 10px; padding-right: 2px; }\n  .settings .preview-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px; border: 1px solid var(--row-border); border-radius: 8px; background: var(--row-bg); }\n  .settings .preview-row:hover { border-color: var(--accent); }\n  .settings .preview-row .n { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--badge-bg); color: var(--badge-ink); font-size: 11px; font-weight: 700; margin-top: 3px; }\n  .settings .preview-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }\n  .settings .row-actions { display: flex; gap: 6px; }\n  .settings .row-actions button { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 22px; padding: 0 9px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 10.5px; font-weight: 600; white-space: nowrap; cursor: pointer; }\n  .settings .row-actions button:hover { border-color: var(--accent); color: var(--ink); }\n  .settings .row-actions button.ok { background: var(--ok); border-color: var(--ok); color: #ffffff; }\n  /* The row's own \u00d7 \u2014 narrower than the text buttons beside it, and destructive. */\n  .settings .row-actions .rm-one { width: 26px; padding: 0; font-size: 13px; line-height: 1; }\n  .settings .row-actions .rm-one:hover { border-color: var(--err); color: var(--err); background: var(--row-bg); }\n  .settings .preview-row.expanded .path-text { white-space: normal; word-break: break-all; overflow: visible; }\n  .settings .preview-notes { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }\n  .settings .preview-notes:empty { display: none; }\n  .settings .note { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 10px; color: #78350f; background: #fffbeb; border: 1px solid #fde68a; border-radius: 999px; padding: 1px 4px 1px 7px; }\n  .settings .note span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n  .settings .note button { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #b45309; font-size: 11px; line-height: 1; cursor: pointer; }\n  .settings .note button:hover { background: #fde68a; }\n  .settings .note-editor { display: flex; gap: 4px; align-items: center; }\n  .settings .note-input { flex: 1; min-width: 0; height: 24px; padding: 0 7px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 11px; }\n  .settings .note-input:focus { outline: none; border-color: var(--accent); }\n  .settings .note-save { flex: none; display: inline-flex; align-items: center; justify-content: center; width: auto; height: 24px; padding: 0 9px; border: 0; border-radius: 6px; background: var(--accent); color: #ffffff; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }\n  .settings .preview-meta { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }\n  .settings .meta { font-size: 10px; color: var(--muted); background: var(--row-bg); border: 1px solid var(--soft); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }\n  .settings .preview-actions { display: none; align-items: center; justify-content: space-between; gap: 8px; }\n  .settings .preview-actions.open { display: flex; }\n  .settings .preview-actions .group { display: flex; gap: 8px; }\n</style>\n<svg id=\"overlay\" xmlns=\"http://www.w3.org/2000/svg\"><path id=\"ocean\" fill-rule=\"evenodd\" d=\"\"/><path id=\"island\" d=\"\"/></svg>\n<div id=\"dialog\" class=\"tool\">\n  <div class=\"box\" id=\"dialog-header\">\n    <button id=\"stepBackBtn\" title=\"To child\" aria-label=\"To child\"><svg viewBox=\"0 0 24 24\"><path d=\"M15 6l-6 6 6 6\"/></svg></button>\n    <button id=\"stepNextBtn\" title=\"To parent\" aria-label=\"To parent\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 6l6 6-6 6\"/></svg></button>\n    <button id=\"configBtn\" title=\"Settings\" aria-label=\"Settings\" aria-expanded=\"false\" aria-controls=\"settingsPanel\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg></button>\n    <button id=\"multiBtn\" title=\"Move\" aria-label=\"Move\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3\"/></svg></button>\n    <button id=\"addBtn\" title=\"Add to picked paths\" aria-label=\"Add to picked paths\">+</button>\n    <button class=\"copy\" id=\"copyBtn\" title=\"Copy path\" aria-label=\"Copy path\">Copy path</button>\n    <button class=\"close\" id=\"quitBtn\" title=\"Quit\" aria-label=\"Quit\"><svg viewBox=\"0 0 24 24\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg></button>\n  </div>\n\n  <section class=\"settings\" id=\"settingsPanel\" hidden>\n    <h2>Settings <span class=\"save-state\" id=\"saveState\">Saved</span></h2>\n    <div class=\"tabs\">\n      <button class=\"tab\" data-tab=\"style\">Style</button>\n      <button class=\"tab\" data-tab=\"config\">Config</button>\n      <button class=\"tab\" data-tab=\"preview\">Path Preview</button>\n    </div>\n\n    <div class=\"panel\" data-panel=\"style\" hidden>\n      <div class=\"presets\">\n        <button class=\"chip preset-btn\" data-preset=\"color\">color only</button>\n        <button class=\"chip preset-btn\" data-preset=\"essentials\">essentials</button>\n        <button class=\"chip preset-btn\" data-preset=\"typography\">typography</button>\n        <button class=\"chip preset-btn\" data-preset=\"box\">box</button>\n        <button class=\"chip preset-btn\" data-preset=\"all\">all</button>\n        <button class=\"chip preset-btn\" data-preset=\"clear\">clear</button>\n      </div>\n      <div class=\"checks\" id=\"config-checks\"></div>\n      <div class=\"custom-label\">Custom (comma-separated):</div>\n      <textarea id=\"config-custom\" rows=\"2\" placeholder=\"e.g. color, background-color, font-size\"></textarea>\n    </div>\n\n    <div class=\"panel\" data-panel=\"config\" hidden>\n      <div class=\"row\"><span>Default format</span><select id=\"format-select\"><option value=\"context\">Context</option><option value=\"xpath\">XPath</option><option value=\"css\">CSS</option><option value=\"pw\">Playwright</option></select></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><span>Separator</span><select id=\"sep-select\"><option value=\"newline\">newline</option><option value=\"numbered\">numbered</option><option value=\"comma\">comma</option><option value=\"json\">JSON</option></select></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"closeAfterCopy\"> close after copy</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-child\" checked> to child</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-parent\" checked> to parent</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-move\" checked> show move</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-settings\" checked> show settings</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-info\" checked> show element info</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-tl\"> show tl in hover</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-tr\"> show tr in hover</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-bl\"> show bl in hover</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-br\"> show br in hover</label></div>\n    </div>\n\n    <div class=\"panel\" data-panel=\"preview\" hidden>\n      <span class=\"path-text\" id=\"path-display\">Hover over an element\u2026</span>\n      <div class=\"preview-meta\"><span class=\"meta\" id=\"el-info\"></span></div>\n      <div class=\"preview-list\" id=\"queue-list\"></div>\n      <div class=\"preview-actions\" id=\"multi-actions\">\n        <span class=\"meta\" id=\"queue-count\">0 paths</span>\n        <div class=\"group\">\n          <button class=\"btn\" id=\"clearBtn\">Clear</button>\n          <button class=\"btn save\" id=\"copyAllBtn\" disabled>Copy All</button>\n        </div>\n      </div>\n      <button class=\"btn full\" id=\"copyIdBtn\" disabled>Copy Selected id</button>\n    </div>\n  </section>\n</div>";
+  tpl.innerHTML = /*__CTP_UI__*/"<style>\n  /* Design tokens. Declared on real shadow-tree elements \u2014 `:root` matches\n     nothing inside a shadow root, so it must not be used here. */\n  #dialog, #overlay {\n    --bg: #87ceeb; --ink: #0f172a; --panel: #ffffff;\n    --line: #5aa9d6; --soft: #d7e0ea; --accent: #0f172a;\n    --radius: 12px; --shadow: 0 8px 24px rgba(15,23,42,.18);\n    --row-bg: #f8fafc; --row-border: #d7e0ea;\n    --ghost-bg: #f8fafc; --ghost-border: #d7e0ea; --ghost-ink: #334155;\n    --input-bg: #f8fafc; --input-border: #d7e0ea;\n    --badge-bg: #0f172a; --badge-ink: #ffffff;\n    --muted: #64748b; --faint: #94a3b8; --code: #0f172a;\n    --ok: #16a34a; --err: #b42318;\n    --mono: ui-monospace,Menlo,monospace;\n  }\n  * { box-sizing: border-box; }\n\n  #overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; cursor: crosshair; pointer-events: auto; fill: rgba(15,23,42,0.35); }\n  #ocean { fill: rgba(0, 0, 0, .12); }\n  #island { fill: rgba(15,23,42,0.12); stroke: #0f172a; stroke-width: 2; }\n  #overlay.frozen { cursor: default; }\n\n  /* \u2500\u2500 toolbox shell \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  #dialog {\n    position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: calc(100vw - 40px);\n    font-family: system-ui,-apple-system,Segoe UI,sans-serif; font-size: 13px; line-height: 1.3; color: var(--ink);\n    pointer-events: auto; z-index: 2147483647;\n  }\n  #dialog.closing { animation: ctp-fadeOut .25s ease forwards; }\n  #dialog.frozen .box { border-color: var(--ok); }\n  @keyframes ctp-fadeOut { from { opacity: 1 } to { opacity: 0; transform: translateY(-8px) } }\n\n  /* \u2500\u2500 toolbar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .box { width: 100%; height: 52px; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); cursor: move; user-select: none; }\n  .tool.open .box { border-radius: var(--radius) var(--radius) 0 0; border-bottom: 0; }\n  .box button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .55); color: var(--ink); cursor: pointer; flex: none; font: inherit; }\n  .box button:hover { background: rgba(255, 255, 255, .85); }\n  .box button.active { background: var(--accent); color: #ffffff; }\n  .box button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }\n  .box .copy { flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--accent); color: #ffffff; font-weight: 700; font-size: 12px; cursor: pointer; }\n  .box .copy:hover { background: #1e293b; }\n  #addBtn { font-size: 18px; font-weight: 700; line-height: 1; }\n  .box button:disabled { opacity: .4; cursor: not-allowed; }\n  .box button:disabled:hover { background: rgba(255, 255, 255, .55); }\n\n  /* \u2500\u2500 settings \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  /* The panel floats above the bar. A fixed auto-height box keeps its top edge\n     when it grows, so the settings section must be out of flow \u2014 otherwise the\n     panel opens off the bottom of the viewport. */\n  .settings { position: absolute; bottom: 100%; left: 0; right: 0; width: 100%; max-height: calc(100vh - 96px); overflow: auto; margin: 0; background: var(--panel); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; box-shadow: var(--shadow); padding: 14px 16px; text-align: left; font-family: system-ui,-apple-system,Segoe UI,sans-serif; }\n  .tool.open .box { border-radius: 0 0 var(--radius) var(--radius); }\n  .settings[hidden] { display: none; }\n  .settings h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; justify-content: space-between; }\n  .save-state { font-size: 10px; font-weight: 400; color: var(--ok); }\n  .settings .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft); padding-bottom: 8px; }\n  .settings .tab { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }\n  .settings .tab:hover { color: var(--ghost-ink); background: var(--ghost-bg); }\n  .settings .tab.active { color: var(--ink); background: var(--ghost-bg); border-color: var(--soft); font-weight: 600; }\n  .panel { min-height: 118px; }\n  .panel[hidden] { display: none; }\n\n  /* \u2500\u2500 style panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }\n  .settings .chip { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 11.5px; white-space: nowrap; cursor: pointer; }\n  .settings .chip:hover { background: var(--row-bg); border-color: var(--ghost-border); }\n  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; max-height: 150px; overflow: auto; margin-bottom: 12px; padding-right: 2px; font-size: 12px; color: var(--ghost-ink); }\n  .checks label { display: flex; align-items: center; gap: 7px; cursor: pointer; }\n  .checks input { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }\n  .custom-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }\n  .settings textarea { width: 100%; min-height: 44px; padding: 6px 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--ink); font-family: var(--mono); font-size: 11px; resize: vertical; }\n  .settings textarea:focus { outline: none; border-color: var(--faint); }\n\n  /* \u2500\u2500 path / output / toolbar panels \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--ghost-ink); }\n  .row select { width: 150px; height: 28px; padding: 0 8px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--input-bg); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }\n  .row label { display: flex; align-items: center; gap: 7px; cursor: pointer; }\n  .row input[type=\"checkbox\"] { width: 13px; height: 13px; margin: 0; accent-color: var(--accent); }\n\n  .settings .btn { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 28px; padding: 0 12px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }\n  .settings .btn:hover { background: var(--row-bg); }\n  .settings .btn.save { background: var(--accent); color: #ffffff; border-color: var(--accent); font-weight: 700; }\n  .settings .btn.save:hover { background: #1e293b; }\n  .settings .btn:disabled { opacity: .45; cursor: not-allowed; }\n  .settings .btn.full { width: 100%; margin-top: 10px; }\n  .side-div { border-top: 1px solid var(--soft); margin: 6px 0; }\n\n  /* \u2500\u2500 path preview panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .settings .path-text { flex: 1; min-width: 0; min-height: 28px; display: flex; align-items: center; padding: 4px 8px; border: 1px solid var(--soft); border-radius: 6px; background: var(--ghost-bg); color: var(--code); font-family: var(--mono); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n  #path-display { white-space: pre-wrap; overflow: auto; max-height: 96px; align-items: flex-start; line-height: 1.45; }\n  .settings .preview-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow: auto; margin: 8px 0 10px; padding-right: 2px; }\n  .settings .preview-row { display: flex; gap: 8px; align-items: flex-start; padding: 8px; border: 1px solid var(--row-border); border-radius: 8px; background: var(--row-bg); }\n  .settings .preview-row:hover { border-color: var(--accent); }\n  .settings .preview-row .n { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: var(--badge-bg); color: var(--badge-ink); font-size: 11px; font-weight: 700; margin-top: 3px; }\n  .settings .preview-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }\n  .settings .row-actions { display: flex; gap: 6px; }\n  .settings .row-actions button { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 22px; padding: 0 9px; border: 1px solid var(--ghost-border); border-radius: 6px; background: var(--ghost-bg); color: var(--ghost-ink); font: inherit; font-size: 10.5px; font-weight: 600; white-space: nowrap; cursor: pointer; }\n  .settings .row-actions button:hover { border-color: var(--accent); color: var(--ink); }\n  .settings .row-actions button.ok { background: var(--ok); border-color: var(--ok); color: #ffffff; }\n  /* The row's own \u00d7 \u2014 narrower than the text buttons beside it, and destructive. */\n  .settings .row-actions .rm-one { width: 26px; padding: 0; font-size: 13px; line-height: 1; }\n  .settings .row-actions .rm-one:hover { border-color: var(--err); color: var(--err); background: var(--row-bg); }\n  .settings .preview-row.expanded .path-text { white-space: normal; word-break: break-all; overflow: visible; }\n  .settings .preview-notes { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }\n  .settings .preview-notes:empty { display: none; }\n  .settings .note { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 10px; color: #78350f; background: #fffbeb; border: 1px solid #fde68a; border-radius: 999px; padding: 1px 4px 1px 7px; }\n  .settings .note span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n  .settings .note button { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #b45309; font-size: 11px; line-height: 1; cursor: pointer; }\n  .settings .note button:hover { background: #fde68a; }\n  .settings .note-editor { display: flex; gap: 4px; align-items: center; }\n  .settings .note-input { flex: 1; min-width: 0; height: 24px; padding: 0 7px; border: 1px solid var(--input-border); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 11px; }\n  .settings .note-input:focus { outline: none; border-color: var(--accent); }\n  .settings .note-save { flex: none; display: inline-flex; align-items: center; justify-content: center; width: auto; height: 24px; padding: 0 9px; border: 0; border-radius: 6px; background: var(--accent); color: #ffffff; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }\n  .settings .preview-meta { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }\n  .settings .meta { font-size: 10px; color: var(--muted); background: var(--row-bg); border: 1px solid var(--soft); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }\n  .settings .preview-actions { display: none; align-items: center; justify-content: space-between; gap: 8px; }\n  .settings .preview-actions.open { display: flex; }\n  .settings .preview-actions .group { display: flex; gap: 8px; }\n</style>\n<svg id=\"overlay\" xmlns=\"http://www.w3.org/2000/svg\"><path id=\"ocean\" fill-rule=\"evenodd\" d=\"\"/><path id=\"island\" d=\"\"/></svg>\n<div id=\"dialog\" class=\"tool\">\n  <div class=\"box\" id=\"dialog-header\">\n    <button id=\"stepBackBtn\" title=\"To child\" aria-label=\"To child\"><svg viewBox=\"0 0 24 24\"><path d=\"M15 6l-6 6 6 6\"/></svg></button>\n    <button id=\"stepNextBtn\" title=\"To parent\" aria-label=\"To parent\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 6l6 6-6 6\"/></svg></button>\n    <button id=\"configBtn\" title=\"Settings\" aria-label=\"Settings\" aria-expanded=\"false\" aria-controls=\"settingsPanel\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/></svg></button>\n    <button id=\"multiBtn\" title=\"Move\" aria-label=\"Move\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3\"/></svg></button>\n    <button id=\"addBtn\" title=\"Add to picked paths\" aria-label=\"Add to picked paths\">+</button>\n    <button class=\"copy\" id=\"copyBtn\" title=\"Copy path\" aria-label=\"Copy path\">Copy path</button>\n    <button class=\"close\" id=\"quitBtn\" title=\"Quit\" aria-label=\"Quit\"><svg viewBox=\"0 0 24 24\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg></button>\n  </div>\n\n  <section class=\"settings\" id=\"settingsPanel\" hidden>\n    <h2>Settings <span class=\"save-state\" id=\"saveState\">Saved</span></h2>\n    <div class=\"tabs\">\n      <button class=\"tab\" data-tab=\"style\">Style</button>\n      <button class=\"tab\" data-tab=\"config\">Config</button>\n      <button class=\"tab\" data-tab=\"preview\">Path Preview</button>\n    </div>\n\n    <div class=\"panel\" data-panel=\"style\" hidden>\n      <div class=\"presets\">\n        <button class=\"chip preset-btn\" data-preset=\"color\">color only</button>\n        <button class=\"chip preset-btn\" data-preset=\"essentials\">essentials</button>\n        <button class=\"chip preset-btn\" data-preset=\"typography\">typography</button>\n        <button class=\"chip preset-btn\" data-preset=\"box\">box</button>\n        <button class=\"chip preset-btn\" data-preset=\"all\">all</button>\n        <button class=\"chip preset-btn\" data-preset=\"clear\">clear</button>\n      </div>\n      <div class=\"checks\" id=\"config-checks\"></div>\n      <div class=\"custom-label\">Custom (comma-separated):</div>\n      <textarea id=\"config-custom\" rows=\"2\" placeholder=\"e.g. color, background-color, font-size\"></textarea>\n    </div>\n\n    <div class=\"panel\" data-panel=\"config\" hidden>\n      <div class=\"row\"><span>Default format</span><select id=\"format-select\"><option value=\"context\">Context</option><option value=\"xpath\">XPath</option><option value=\"css\">CSS</option><option value=\"pw\">Playwright</option></select></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><span>Separator</span><select id=\"sep-select\"><option value=\"newline\">newline</option><option value=\"numbered\">numbered</option><option value=\"comma\">comma</option><option value=\"json\">JSON</option></select></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"closeAfterCopy\"> close after copy</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-child\" checked> to child</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-parent\" checked> to parent</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-move\" checked> show move</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-settings\" checked> show settings</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-info\" checked> show element info</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-tl\"> show tl in hover</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-tr\"> show tr in hover</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-bl\"> show bl in hover</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-corner-br\"> show br in hover</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><span style=\"font-weight:600\">Context</span></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeURL\" checked disabled> Page URL (always on, cannot disable)</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeSource\" checked> Source file path</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeComponentChain\" checked> Component chain</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeUsage\"> Rendered inside</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeViewport\" checked> Viewport size</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeTitle\"> Page title</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><span style=\"font-weight:600\">Element</span></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeSelector\" checked> CSS selector</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeDOMPath\"> DOM path</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeClasses\" checked> Classes</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeText\" checked> Text content</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeAttributes\"> Attributes</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includePosition\"> Position and size</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeSection\"> Section heading</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeNearby\"> Nearby text</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeHTML\"> HTML snippet</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeStyles\"> Computed styles</label></div>\n      <div class=\"side-div\"></div>\n      <div class=\"row\"><span style=\"font-weight:600\">Screenshot</span></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeScreenshot\" checked> Capture with new annotation</label></div>\n      <div class=\"row\"><label><input type=\"checkbox\" id=\"opt-includeScreenshotCompact\"> Include in compact output</label></div>\n    </div>\n\n    <div class=\"panel\" data-panel=\"preview\" hidden>\n      <span class=\"path-text\" id=\"path-display\">Hover over an element\u2026</span>\n      <div class=\"preview-meta\"><span class=\"meta\" id=\"el-info\"></span></div>\n      <div class=\"preview-list\" id=\"queue-list\"></div>\n      <div class=\"preview-actions\" id=\"multi-actions\">\n        <span class=\"meta\" id=\"queue-count\">0 paths</span>\n        <div class=\"group\">\n          <button class=\"btn\" id=\"clearBtn\">Clear</button>\n          <button class=\"btn save\" id=\"copyAllBtn\" disabled>Copy All</button>\n        </div>\n      </div>\n      <button class=\"btn full\" id=\"copyIdBtn\" disabled>Copy Selected id</button>\n    </div>\n  </section>\n</div>";
   shadow.appendChild(tpl.content.cloneNode(true));
 
   document.documentElement.appendChild(host);
+
+  // ── MAIN-world bridge ──────────────────────────────────────────
+  // Framework internals (React fiber, Vue component, ...) live in the page's
+  // own JavaScript world. A content script cannot see them, so we inject a
+  // small collector into the main world and talk to it with DOM events.
+  var mainBridgeInjected = false;
+  function injectMainBridge() {
+    if (mainBridgeInjected) return;
+    mainBridgeInjected = true;
+    var s = document.createElement('script');
+    s.textContent = [
+      'window.__ctpCollectContext = function(el) {',
+      '  try {',
+      '    var out = { framework: null, file: null, line: null, componentChain: null, usage: null };',
+      '    // React',
+      '    var node = el;',
+      '    var fiber = null, tries = 0;',
+      '    while (node && !fiber && tries < 6) {',
+      '      for (var k in node) {',
+      '        if (/^__react(Fiber|InternalInstance)\\$/.test(k)) { fiber = node[k]; break; }',
+      '      }',
+      '      if (!fiber && node.parentElement) node = node.parentElement; tries++;',
+      '    }',
+      '    if (fiber) {',
+      '      out.framework = "React";',
+      '      var f = fiber, chain = [], owners = f._debugOwner || f._debugStack; ',
+      '      // collect owners',
+      '      var o = f._debugOwner;',
+      '      var names = [];',
+      '      while (o) { var n = (o.type && (o.type.displayName || o.type.name)) || o.name; if (n) names.push(n); o = o._debugOwner; }',
+      '      if (names.length) names.reverse();',
+      '      names.push((f.type && (f.type.displayName || f.type.name)) || f.type || (el && el.tagName && el.tagName.toLowerCase()));',
+      '      if ((el && el.tagName)) names.push(el.tagName.toLowerCase());',
+      '      // de-dupe adjacent',
+      '      var dedup = []; names.forEach(function(n){ if (!dedup.length || dedup[dedup.length-1] !== n) dedup.push(n); });',
+      '      out.componentChain = dedup.join(" > ");',
+      '      var src = f._debugSource;',
+      '      if (src && src.fileName) { out.file = src.fileName; out.line = src.lineNumber || src.line || null; }',
+      '      if (!out.file && typeof f._debugStack === "string") {',
+      '        var m = f._debugStack.match(/\\(([^)]+):(\\d+):(\\d+)\\)/);',
+      '        if (m) { out.file = m[1]; out.line = parseInt(m[2],10); }',
+      '      }',
+      '      // usage: parent owner',
+      '      if (f._debugOwner) {',
+      '        var po = f._debugOwner;',
+      '        var pn = (po.type && (po.type.displayName || po.type.name)) || po.name;',
+      '        var ps = po._debugSource;',
+      '        if (pn) out.usage = "<" + pn + "> at @" + (ps && ps.fileName ? ps.fileName : "") + (ps && (ps.lineNumber||ps.line) ? ":" + (ps.lineNumber||ps.line) : "");',
+      '      }',
+      '    }',
+      '    // Vue',
+      '    if (!out.file) {',
+      '      var vNode = el;',
+      '      var triesV = 0, inst = null;',
+      '      while (vNode && !inst && triesV < 6) {',
+      '        if (vNode.__vueParentComponent) inst = vNode.__vueParentComponent;',
+      '        else if (vNode.__vue__) inst = vNode.__vue__; ',
+      '        if (!inst && vNode.parentElement) vNode = vNode.parentElement; triesV++;',
+      '      }',
+      '      if (inst) {',
+      '        out.framework = "Vue";',
+      '        if (inst.type && inst.type.__file) { out.file = inst.type.__file; }',
+      '        if (inst.type && (inst.type.name || inst.type.__name)) out.componentChain = (inst.type.name || inst.type.__name);',
+      '        // ancestors',
+      '        var cur = inst, chainV = [];',
+      '        while (cur) {',
+      '          var nm = cur.type && (cur.type.name || cur.type.__name || cur.type.displayName);',
+      '          if (nm) chainV.unshift(nm);',
+      '          cur = cur.parent;',
+      '        }',
+      '        if (chainV.length) { chainV.push(el && el.tagName && el.tagName.toLowerCase()); out.componentChain = chainV.join(" > "); }',
+      '        if (inst.parent && inst.parent.type) {',
+      '          var pnm = inst.parent.type.name || inst.parent.type.__name || inst.parent.type.displayName;',
+      '          var pf = inst.parent.type && inst.parent.type.__file;',
+      '          if (pnm) out.usage = "<" + pnm + "> at @" + (pf || "");',
+      '        }',
+      '      }',
+      '    }',
+      '    // Svelte',
+      '    if (!out.file) {',
+      '      var sNode = el, triesS = 0, meta = null;',
+      '      while (sNode && !meta && triesS < 6) {',
+      '        if (sNode.__svelte_meta) meta = sNode.__svelte_meta;',
+      '        if (!meta && sNode.parentElement) sNode = sNode.parentElement; triesS++;',
+      '      }',
+      '      if (meta && meta.loc) {',
+      '        out.framework = "Svelte";',
+      '        out.file = meta.loc.file;',
+      '        out.line = meta.loc.line;',
+      '        if (meta.loc.component) out.componentChain = String(meta.loc.component);',
+      '      }',
+      '    }',
+      '    // Angular',
+      '    if (!out.file && window.ng && typeof window.ng.getOwningComponent === "function") {',
+      '      var comp = null;',
+      '      try { comp = window.ng.getOwningComponent(el); } catch(e) {}',
+      '      if (comp) {',
+      '        out.framework = "Angular";',
+      '        var cn = (comp.constructor && comp.constructor.name) || "Component";',
+      '        out.componentChain = cn;',
+      '        // try debug info',
+      '        try {',
+      '          var debug = comp.constructor && (comp.constructor.ɵcmp || comp.constructor.ɵcmp.debugInfo);',
+      '          if (debug && debug.fileName) out.file = debug.fileName;',
+      '          if (debug && debug.lineNumber) out.line = debug.lineNumber;',
+      '        } catch(e){}',
+      '      }',
+      '    }',
+      '    // Sentry attributes (production)',
+      '    if (!out.file) {',
+      '      var sentryNode = el, triesN = 0;',
+      '      while (sentryNode && triesN < 6) {',
+      '        if (sentryNode.getAttribute && sentryNode.getAttribute("data-sentry-source-file")) {',
+      '          out.framework = "Sentry";',
+      '          out.file = sentryNode.getAttribute("data-sentry-source-file");',
+      '          out.componentChain = sentryNode.getAttribute("data-sentry-component");',
+      '          break;',
+      '        }',
+      '        if (sentryNode.parentElement) sentryNode = sentryNode.parentElement; triesN++;',
+      '      }',
+      '    }',
+      '    return out;',
+      '  } catch (e) { return null; }',
+      '};',
+      'window.addEventListener("ctp:get-context", function(e) {',
+      '  var d = (e && e.detail) || {};',
+      '  var r = (window.__ctpCollectContext && d.el) ? window.__ctpCollectContext(d.el) : null;',
+      '  window.dispatchEvent(new CustomEvent("ctp:context-result", { detail: { id: d.id, result: r } }));',
+      '});'
+    ].join('\n');
+    document.documentElement.appendChild(s);
+    s.remove();
+  }
+  injectMainBridge();
+
+  function requestMainContext(el) {
+    return new Promise(function (resolve) {
+      var id = 'ctp_' + Math.random().toString(36).slice(2);
+      function handler(e) {
+        var d = e && e.detail;
+        if (!d || d.id !== id) return;
+        window.removeEventListener('ctp:context-result', handler);
+        resolve(d.result || null);
+      }
+      window.addEventListener('ctp:context-result', handler);
+      try { window.dispatchEvent(new CustomEvent('ctp:get-context', { detail: { id: id, el: el } })); }
+      catch (err) { resolve(null); }
+      setTimeout(function () { window.removeEventListener('ctp:context-result', handler); resolve(null); }, 200);
+    });
+  }
+
+  // ── Context cache ───────────────────────────────────────────────
+  var contextCache = new Map();
+
+  function ensureContext(el) {
+    if (!contextCache.has(el)) {
+      contextCache.set(el, {
+        source: null,
+        fingerprint: null,
+        searched: false
+      });
+    }
+    var c = contextCache.get(el);
+    if (!c.fingerprint) c.fingerprint = buildFingerprint(el);
+    return c;
+  }
+
+  function toProjectRelative(p) {
+    if (!p) return null;
+    var s = String(p);
+    try {
+      if (/^https?:\/\//i.test(s)) {
+        var u = new URL(s);
+        s = u.pathname || s;
+      }
+    } catch (e) {}
+    s = s.replace(/\\\\/g, '/');
+    s = s.split('?')[0].split('#')[0];
+    var idx = s.lastIndexOf('/src/');
+    if (idx >= 0) return s.slice(idx + 1);
+    idx = s.lastIndexOf('src/');
+    if (idx >= 0 && (idx === 0 || s.charAt(idx - 1) === '/')) return s.slice(idx);
+    return s.replace(/^\/+/, '');
+  }
+
+  function collectBuildPluginSource(el) {
+    var node = el;
+    for (var depth = 0; depth < 8 && node; depth++) {
+      if (node.getAttribute) {
+        var sentryFile = node.getAttribute('data-sentry-source-file');
+        if (sentryFile) {
+          return {
+            framework: 'Sentry',
+            file: sentryFile,
+            line: parseFileLineNum(node.getAttribute('data-sentry-line') || node.getAttribute('data-sentry-source-line')),
+            componentChain: node.getAttribute('data-sentry-component'),
+            usage: null
+          };
+        }
+        var vi = node.getAttribute('data-v-inspector');
+        if (vi) {
+          var pl = parseFileLine(vi);
+          if (pl) return { framework: 'Vue', file: pl.file, line: pl.line, componentChain: null, usage: null };
+        }
+        var rel = node.getAttribute('data-inspector-relative-path');
+        if (rel) {
+          var ln = node.getAttribute('data-inspector-line') || node.getAttribute('data-inspector-row') || node.getAttribute('data-line');
+          return { framework: 'React', file: rel, line: ln ? parseInt(ln, 10) : null, componentChain: null, usage: null };
+        }
+        var astro = node.getAttribute('data-astro-source-file');
+        if (astro) {
+          var aln = node.getAttribute('data-astro-source-line');
+          return { framework: 'Astro', file: astro, line: aln ? parseInt(aln, 10) : null, componentChain: null, usage: null };
+        }
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  function parseFileLine(str) {
+    if (!str) return null;
+    var m = String(str).match(/^(.*?):(\\d+)(?::\\d+)?$/);
+    if (m) return { file: m[1], line: parseInt(m[2], 10) };
+    return { file: String(str), line: null };
+  }
+  function parseFileLineNum(str) {
+    if (!str) return null;
+    var m = String(str).match(/(\\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  function candidateStrings(el) {
+    var out = [];
+    var text = (el.textContent || '').trim().replace(/\s+/g, ' ');
+    if (text && text.length >= 4 && text.length <= 80) out.push(text);
+    var aria = el.getAttribute && el.getAttribute('aria-label');
+    if (aria && aria.trim().length >= 3) out.push(aria.trim());
+    var tid = getTestId(el);
+    if (tid && tid.value) out.push(String(tid.value));
+    var id = el.id;
+    if (id && id.length >= 3) out.push(String(id));
+    var classes = (el.className && typeof el.className === 'string') ? el.className.trim().split(/\\s+/) : [];
+    if (classes.length) {
+      var stable = classes[0];
+      if (stable && stable.length >= 4 && !/^[a-z]{1,2}-?[a-f0-9]{4,}$/i.test(stable)) out.push(stable);
+    }
+    // de-dupe
+    var seen = {};
+    return out.filter(function (s) { if (seen[s]) return false; seen[s] = true; return true; });
+  }
+
+  var scriptTextCache = {};
+  function getSameOriginScripts() {
+    var set = {};
+    var urls = [];
+    function add(u) {
+      try {
+        var abs = new URL(u, location.href).href;
+        if (new URL(abs).origin !== location.origin) return;
+        if (set[abs]) return;
+        set[abs] = true;
+        urls.push(abs);
+      } catch (e) {}
+    }
+    document.querySelectorAll('script[src]').forEach(function (s) { add(s.src); });
+    try {
+      performance.getEntriesByType('resource').forEach(function (r) {
+        if (r.initiatorType === 'script' || /\\.js(\\?|$)/.test(r.name)) add(r.name);
+      });
+    } catch (e) {}
+    return urls;
+  }
+
+  function fetchScriptText(url) {
+    if (scriptTextCache[url]) return scriptTextCache[url];
+    var p = fetch(url, { credentials: 'same-origin' }).then(function (r) {
+      if (!r.ok) throw new Error('bad status');
+      return r.text();
+    }).catch(function () { return null; });
+    scriptTextCache[url] = p;
+    return p;
+  }
+
+  function getScriptEntries() {
+    var entries = [];
+    var seen = {};
+    getSameOriginScripts().forEach(function (u) {
+      if (seen[u]) return; seen[u] = true;
+      entries.push({ url: u, textPromise: fetchScriptText(u) });
+    });
+    document.querySelectorAll('script:not([src])').forEach(function (s, i) {
+      var u = location.href + '#inline-' + i;
+      if (seen[u]) return; seen[u] = true;
+      entries.push({ url: u, textPromise: Promise.resolve(s.textContent || '') });
+    });
+    return entries;
+  }
+
+  function runSourceSearch(el) {
+    var c = ensureContext(el);
+    if (c.source && c.source.file) return Promise.resolve(c.source);
+    var cands = candidateStrings(el);
+    if (!cands.length) return Promise.resolve(null);
+    var entries = getScriptEntries();
+    var urls = entries.map(function (e) { return e.url; });
+    return Promise.all(entries.map(function (e) { return e.textPromise; })).then(function (texts) {
+      var best = null; // {file, line, count}
+      for (var ci = 0; ci < cands.length; ci++) {
+        var cand = cands[ci];
+        var fileCount = 0;
+        var firstMatch = null;
+        for (var i = 0; i < entries.length; i++) {
+          var t = texts[i];
+          if (!t) continue;
+          if (t.indexOf(cand) === -1) continue;
+          fileCount++;
+          if (!firstMatch) {
+            var idx = t.indexOf(cand);
+            var line = t.slice(0, idx).split(/\n/).length;
+            firstMatch = { url: urls[i], line: line };
+          }
+        }
+        if (fileCount > 0 && fileCount <= 5) {
+          if (!best || fileCount < best.count) {
+            best = { url: firstMatch.url, line: firstMatch.line, count: fileCount };
+          }
+        }
+      }
+      if (best) {
+        var src = { framework: 'Search', file: best.url, line: best.line, componentChain: null, usage: null };
+        // store raw url; normalization later
+        c.source = src;
+        // mark searched
+        c.searched = true;
+      } else {
+        c.searched = true;
+      }
+      return c.source;
+    });
+  }
+
+  function scheduleSourceSearch(el) {
+    ensureContext(el);
+    runSourceSearch(el);
+    setTimeout(function () { var c = contextCache.get(el); if (c && !(c.source && c.source.file)) runSourceSearch(el); }, 500);
+    setTimeout(function () { var c = contextCache.get(el); if (c && !(c.source && c.source.file)) runSourceSearch(el); }, 1500);
+  }
+
+  async function collectSource(el) {
+    var c = ensureContext(el);
+    // Layer 1 main bridge
+    var info = null;
+    try { info = await requestMainContext(el); } catch (e) { info = null; }
+    if (info) {
+      if (!c.source) c.source = { framework: null, file: null, line: null, componentChain: null, usage: null };
+      if (info.framework) c.source.framework = info.framework;
+      if (info.file) c.source.file = info.file;
+      if (info.line) c.source.line = info.line;
+      if (info.componentChain) c.source.componentChain = info.componentChain;
+      if (info.usage) c.source.usage = info.usage;
+      if (c.source.file) return c.source;
+    }
+    // Layer 2 build plugin attrs (sync)
+    var bps = collectBuildPluginSource(el);
+    if (bps && bps.file) {
+      c.source = bps;
+      return c.source;
+    }
+    // Layer 3 scheduled (async) – kick off
+    scheduleSourceSearch(el);
+    return c.source;
+  }
+
+  function engineSourceLine(src) {
+    if (!src || !src.file) return '- Source: not found. Use the selector and fingerprint to search.';
+    var path = src.file;
+    if (path.indexOf('#inline-') === -1) {
+      var rel = toProjectRelative(path);
+      if (rel && rel.length) path = rel;
+    }
+    if (src.line) return '- Source: @' + path + ':' + src.line;
+    return '- Source: @' + path;
+  }
+
+  // ── Fingerprint ─────────────────────────────────────────────────
+  function buildFingerprint(el) {
+    var rect = el.getBoundingClientRect();
+    var cls = (el.className && typeof el.className === 'string') ? el.className.trim().split(/\\s+/).filter(Boolean) : [];
+    var text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 200);
+    // selector
+    var selector = '';
+    try { selector = getSelectorPath(el, 'css'); } catch (e) { selector = el.tagName.toLowerCase(); }
+    var domPath = '';
+    try { domPath = getDomPath(el); } catch (e) { domPath = selector; }
+    // attributes
+    var attrNames = ['role', 'aria-label', 'name', 'type', 'href', 'alt', 'title', 'data-testid'];
+    var attrs = [];
+    attrNames.forEach(function (a) {
+      var v = el.getAttribute && el.getAttribute(a);
+      if (v) attrs.push(a + '="' + String(v).slice(0, 80) + '"');
+    });
+    // nearby
+    var prevText = '', nextText = '';
+    try {
+      if (el.previousElementSibling) prevText = (el.previousElementSibling.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+      if (el.nextElementSibling) nextText = (el.nextElementSibling.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    } catch (e) {}
+    // section
+    var section = '';
+    try {
+      var landmark = el.closest('section, article, form, nav, header, footer');
+      if (landmark) {
+        var h = landmark.querySelector('h1,h2,h3,h4,h5,h6');
+        if (h) section = (h.textContent || '').trim().slice(0, 80);
+        else if (landmark.getAttribute('aria-label')) section = landmark.getAttribute('aria-label');
+        else if (landmark.getAttribute('aria-labelledby')) {
+          var labeled = document.getElementById(landmark.getAttribute('aria-labelledby'));
+          if (labeled) section = (labeled.textContent || '').trim().slice(0, 80);
+        }
+      }
+    } catch (e) {}
+    // computed styles (non-default subset)
+    var styleProps = ['display', 'position', 'background-color', 'color', 'font-size', 'font-family', 'border-radius', 'margin', 'padding', 'width', 'height', 'z-index'];
+    var styles = [];
+    try {
+      var cs = window.getComputedStyle(el);
+      var defaults = { display: 'inline', position: 'static' };
+      styleProps.forEach(function (p) {
+        var v = cs.getPropertyValue(p);
+        if (v && v !== 'none' && v !== 'auto' && v !== 'normal' && v !== '0px' && v !== 'rgba(0, 0, 0, 0)') {
+          styles.push(p + ': ' + v);
+        }
+      });
+    } catch (e) {}
+    var html = '';
+    try { html = el.outerHTML.slice(0, 200); } catch (e) {}
+    return {
+      selector: selector,
+      domPath: domPath,
+      text: text,
+      classes: cls.join(' '),
+      attrs: attrs.join(' '),
+      position: Math.round(rect.width) + 'x' + Math.round(rect.height) + ' at (' + Math.round(rect.left) + ', ' + Math.round(rect.top) + ')',
+      section: section,
+      nearby: 'before it "' + prevText + '", after it "' + nextText + '"',
+      prevText: prevText,
+      nextText: nextText,
+      html: html,
+      styles: styles.join('; '),
+      viewport: window.innerWidth + 'x' + window.innerHeight,
+      title: document.title
+    };
+  }
+
+  function getDomPath(el) {
+    var parts = [];
+    var cur = el;
+    var depth = 0;
+    while (cur && cur !== document.documentElement && depth < 25) {
+      parts.unshift(cur.tagName.toLowerCase());
+      if (cur.parentElement) cur = cur.parentElement;
+      else {
+        var r = cur.getRootNode ? cur.getRootNode() : null;
+        if (r && r instanceof ShadowRoot && r.host) { parts.unshift('{shadow}'); cur = r.host; }
+        else break;
+      }
+      depth++;
+    }
+    parts.unshift('html');
+    return parts.join(' > ');
+  }
+
+  function buildContextOutput(el) {
+    var c = ensureContext(el);
+    if (!c.fingerprint) c.fingerprint = buildFingerprint(el);
+    var fp = c.fingerprint;
+    var src = c.source;
+    var inc = function (k) { return settings[k] !== false; };
+    var lines = [];
+    // Only include the Source line when a source file was actually found.
+    if (inc('includeSource') && src && src.file) lines.push(engineSourceLine(src));
+    // Details (annotations) are included only when they exist for this element.
+    try {
+      var full = getSelectorPath(el, formatMode);
+      var ds = notesByPath[full] || [];
+      if (ds.length) lines.push('- Details: ' + ds.join('; '));
+    } catch (e) {}
+    if (inc('includeComponentChain') && src && src.componentChain) {
+      var fw = src.framework || 'Component';
+      lines.push('- ' + fw + ' component: ' + src.componentChain);
+    }
+    if (inc('includeUsage') && src && src.usage) lines.push('- Rendered inside: ' + src.usage);
+    if (inc('includeSelector')) lines.push('- Selector: ' + fp.selector);
+    if (inc('includeDOMPath')) lines.push('- DOM path: ' + fp.domPath);
+    if (inc('includeClasses') && fp.classes) lines.push('- Classes: ' + fp.classes);
+    if (inc('includeText')) lines.push('- Text: "' + fp.text + '"');
+    if (inc('includeAttributes') && fp.attrs) lines.push('- Attributes: ' + fp.attrs);
+    if (inc('includePosition')) lines.push('- Position: ' + fp.position);
+    if (inc('includeSection') && fp.section) lines.push('- Section: "' + fp.section + '"');
+    if (inc('includeNearby')) lines.push('- Nearby: ' + fp.nearby);
+    if (inc('includeHTML') && fp.html) lines.push('- HTML: ' + fp.html);
+    if (inc('includeStyles') && fp.styles) lines.push('- Computed styles: ' + fp.styles);
+    if (inc('includeViewport')) lines.push('- Viewport: ' + fp.viewport);
+    if (inc('includeTitle')) lines.push('- Page title: ' + fp.title);
+    // URL is mandatory even if the (disabled) toggle were off.
+    lines.push('- Page: ' + location.href);
+    return lines.join('\n');
+  }
+
+  function elLabel(el) {
+    var tag = el.tagName.toLowerCase();
+    var text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    return tag + (text ? ' "' + text + '"' : '');
+  }
+
+  // Monitor hover: collect source lazily
+  // (called below when wiring)
 
   var overlay = shadow.querySelector('#overlay');
   var ocean = shadow.querySelector('#ocean');
@@ -849,6 +1367,37 @@
     });
   });
 
+  // ── Context-path toggles ────────────────────────────────────────
+  // Per-field customization from the context path plan. Keys match the toggle
+  // names in the plan; ids in the UI are `opt-<key>`.
+  var CONTEXT_TOGGLE_KEYS = [
+    'includeURL', 'includeTitle', 'includeSource', 'includeComponentChain',
+    'includeUsage', 'includeSelector', 'includeDOMPath', 'includeClasses',
+    'includeText', 'includeAttributes', 'includePosition', 'includeSection',
+    'includeNearby', 'includeHTML', 'includeStyles', 'includeViewport',
+    'includeScreenshot', 'includeScreenshotCompact'
+  ];
+  var CONTEXT_TOGGLE_DEFAULTS = {
+    includeURL: true, includeTitle: false, includeSource: true,
+    includeComponentChain: true, includeUsage: false, includeSelector: true,
+    includeDOMPath: false, includeClasses: true, includeText: true,
+    includeAttributes: false, includePosition: false, includeSection: false,
+    includeNearby: false, includeHTML: false, includeStyles: false,
+    includeViewport: true, includeScreenshot: true, includeScreenshotCompact: false
+  };
+  CONTEXT_TOGGLE_KEYS.forEach(function (key) {
+    if (settings[key] === undefined && CONTEXT_TOGGLE_DEFAULTS[key] !== undefined) {
+      settings[key] = CONTEXT_TOGGLE_DEFAULTS[key];
+    }
+  });
+  // URL is mandatory: it can never be off.
+  settings.includeURL = true;
+  CONTEXT_TOGGLE_KEYS.forEach(function (key) {
+    registerToggle('opt-' + key, function () { /* value lives in settings */ });
+  });
+  var urlToggle = shadow.querySelector('#opt-includeURL');
+  if (urlToggle) { urlToggle.checked = true; urlToggle.disabled = true; }
+
   // Center z-index label
   var centerLabel = document.createElement('div');
   centerLabel.style.cssText = 'position:fixed;z-index:2147483646;font:12px/1 SF Mono,Cascadia Code,Fira Code,Menlo,monospace;color:#1E3A5F;background:#FFD700;padding:2px 6px;border-radius:4px;pointer-events:none;display:none;';
@@ -945,6 +1494,14 @@
   function updateUI(el) {
     if (!el || el === currentEl) return;
     currentEl = el;
+    // Kick off layered source resolution (framework -> build plugin -> search)
+    // and re-prove after source maps arrive late.
+    try {
+      ensureContext(el);
+      collectSource(el);
+      setTimeout(function () { if (contextCache.has(el)) collectSource(el); }, 500);
+      setTimeout(function () { if (contextCache.has(el)) collectSource(el); }, 1500);
+    } catch (e) {}
     var rect = el.getBoundingClientRect();
     var vw = window.innerWidth;
     var vh = window.innerHeight;
@@ -1314,6 +1871,14 @@
   }
 
   function buildMultiOutput() {
+    var isContextMode = (formatMode === 'auto' || formatMode === 'context');
+    if (isContextMode) {
+      return collected.map(function (item, idx) {
+        try {
+          return '## ' + (idx + 1) + '. Element: ' + elLabel(item.el) + '\n\n' + buildContextOutput(item.el);
+        } catch (e) { return '## ' + (idx + 1) + '. Element: (detached)'; }
+      }).join('\n\n');
+    }
     var paths = collected.map(function (item) {
       try { return getSelectorPath(item.el, formatMode); } catch (e) { return '(detached)'; }
     });
@@ -1353,7 +1918,9 @@
     var zVal = getZ(currentEl);
     var selector = getSelectorPath(currentEl, formatMode);
     var isContextMode = (formatMode === 'auto' || formatMode === 'context');
-    var copyText = isContextMode ? buildPathData(currentEl, selector, zVal).toText() : selector;
+    var copyText = isContextMode
+      ? ('## 1. Element: ' + elLabel(currentEl) + '\n\n' + buildContextOutput(currentEl))
+      : selector;
     var pct = calcTestidPercent(currentEl);
     console.log('[copy-ui-path-lite] ──────────────────────────────────────');
     console.log('[copy-ui-path-lite] COPIED TO CLIPBOARD:');
@@ -1559,6 +2126,13 @@
   renderQueue();
   updateAddBtn();
   updateCopyBtn();
+  window.__ctp_context = {
+    build: buildContextOutput,
+    ensure: ensureContext,
+    cache: contextCache,
+    collect: collectSource,
+    toggles: function () { return settings; }
+  };
   window.__ctp_multi = {
     get: function () { return collected.map(function (it) { return it.el; }); },
     mode: function () { return multiMode; },
