@@ -1091,11 +1091,16 @@
     if (inc('includeSelector')) lines.push('- Selector: ' + fp.selector);
     if (inc('includeDOMPath')) lines.push('- DOM path: ' + fp.domPath);
     if (inc('includeClasses') && fp.classes) lines.push('- Classes: ' + fp.classes);
-    if (inc('includeText')) lines.push('- Text: "' + fp.text + '"');
+    if (inc('includeText') && fp.text) lines.push('- Text: "' + fp.text + '"');
     if (inc('includeAttributes') && fp.attrs) lines.push('- Attributes: ' + fp.attrs);
-    if (inc('includePosition')) lines.push('- Position: ' + fp.position);
+    if (inc('includePosition') && fp.position) lines.push('- Position: ' + fp.position);
     if (inc('includeSection') && fp.section) lines.push('- Section: "' + fp.section + '"');
-    if (inc('includeNearby')) lines.push('- Nearby: ' + fp.nearby);
+    if (inc('includeNearby')) {
+      var near = [];
+      if (fp.prevText) near.push('before it "' + fp.prevText + '"');
+      if (fp.nextText) near.push('after it "' + fp.nextText + '"');
+      if (near.length) lines.push('- Nearby: ' + near.join(', '));
+    }
     if (inc('includeHTML') && fp.html) lines.push('- HTML: ' + fp.html);
     if (inc('includeStyles') && fp.styles) lines.push('- Computed styles: ' + fp.styles);
     if (inc('includeViewport')) lines.push('- Viewport: ' + fp.viewport);
@@ -1162,11 +1167,14 @@
   var collected = [];
   var multiMode = true;
   var sepStyle = settings.sep || 'newline';
+  var sepCustom = settings.sepCustom || '\n\n';
   var closeAfterCopy = !!settings.closeAfterCopy;
   var formatMode = settings.format || 'context';
   try { formatSelect.value = formatMode; } catch (e) {}
   try { sepSelect.value = sepStyle; } catch (e) {}
   if (closeAfterCopyBox) closeAfterCopyBox.checked = closeAfterCopy;
+  var sepCustomInput = shadow.querySelector('#sep-custom');
+  if (sepCustomInput) { sepCustomInput.value = sepCustom; }
 
   formatSelect.addEventListener('change', function() {
     formatMode = this.value;
@@ -1869,11 +1877,21 @@
   function buildMultiOutput() {
     var isContextMode = (formatMode === 'auto' || formatMode === 'context');
     if (isContextMode) {
-      return collected.map(function (item, idx) {
+      var contextBlocks = collected.map(function (item, idx) {
         try {
           return '## ' + (idx + 1) + '. Element: ' + elLabel(item.el) + '\n\n' + buildContextOutput(item.el);
         } catch (e) { return '## ' + (idx + 1) + '. Element: (detached)'; }
-      }).join('\n\n');
+      });
+      if (sepStyle === 'json') {
+        return JSON.stringify(contextBlocks);
+      }
+      if (sepStyle === 'comma') return contextBlocks.join(', ');
+      if (sepStyle === 'custom') {
+        var js = sepCustom.replace(/\\n/g, '\n');
+        return contextBlocks.join(js);
+      }
+      // numbered and newline both keep the block numbers; use a blank line between blocks
+      return contextBlocks.join('\n\n');
     }
     var paths = collected.map(function (item) {
       try { return getSelectorPath(item.el, formatMode); } catch (e) { return '(detached)'; }
@@ -1885,6 +1903,7 @@
     if (sepStyle === 'json') {
       return JSON.stringify(paths.map(function (p, i) { return { n: i + 1, path: p }; }));
     }
+    if (sepStyle === 'custom') return paths.join(sepCustom.replace(/\\n/g, '\n'));
     return paths.join('\n');
   }
 
@@ -2108,6 +2127,14 @@
       renderQueue();
     });
   }
+  if (sepCustomInput) {
+    sepCustomInput.addEventListener('change', function () {
+      sepCustom = this.value;
+      settings.sepCustom = sepCustom;
+      autoSave();
+      renderQueue();
+    });
+  }
   if (copyAllBtn) copyAllBtn.addEventListener('click', doCopyAll);
   if (clearBtn) clearBtn.addEventListener('click', clearQueue);
   if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () {
@@ -2131,14 +2158,17 @@
   };
   window.__ctp_multi = {
     get: function () { return collected.map(function (it) { return it.el; }); },
+    current: function () { return currentEl; },
     mode: function () { return multiMode; },
     setMode: setMultiMode,
-    add: addItem,
+    add: function (el) { addItem(el || addTarget()); },
+    addEl: function (el) { addItem(el); },
     remove: removeItem,
     clear: clearQueue,
     output: buildMultiOutput,
     copyAll: doCopyAll,
-    setSep: function (s) { sepStyle = s; renderQueue(); },
+    setSep: function (s) { sepStyle = s; settings.sep = s; autoSave(); renderQueue(); },
+    setSepCustom: function (s) { sepCustom = s; settings.sepCustom = s; autoSave(); renderQueue(); },
     setFormat: function (m) { formatMode = m; if (currentEl) renderPathDisplay(currentEl, getZ(currentEl)); renderQueue(); }
   };
   overlay.addEventListener('mousemove', onMouseMove);
