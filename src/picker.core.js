@@ -7,7 +7,20 @@
 
   // Inject shake animation + close animation (keep in sync with theme tokens)
   var injectedStyle = document.createElement('style');
-  injectedStyle.textContent = '@keyframes ctp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}@keyframes ctp-fadeOut{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}';
+  injectedStyle.textContent =
+    '@keyframes ctp-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}' +
+    '@keyframes ctp-fadeOut{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}' +
+    // Numbered page badges are appended to document.body, not to the picker's
+    // shadow tree, so they need a real stylesheet — inline cssText cannot say
+    // "show the × while this badge is hovered". `pointer-events` has to flip
+    // from none to auto for the badge to be hoverable at all; it lives here so
+    // the inline cssText never re-asserts `none` over it.
+    '.ctp-badge{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;}' +
+    // The number must not swallow clicks meant for the × beside it.
+    '.ctp-badge-n{pointer-events:none;}' +
+    '.ctp-badge-x{display:none;align-items:center;justify-content:center;width:12px;height:12px;margin-left:4px;padding:0;border:0;border-radius:50%;background:transparent;color:inherit;font-family:inherit;font-size:12px;font-weight:700;line-height:1;cursor:pointer;}' +
+    '.ctp-badge:hover .ctp-badge-x,.ctp-badge:focus-within .ctp-badge-x{display:inline-flex;}' +
+    '.ctp-badge-x:hover{background:rgba(30,58,95,.18);}';
   document.head.appendChild(injectedStyle);
 
   // ── Path building ──────────────────────────────────────────────────
@@ -490,8 +503,9 @@
   function elFromPoint(x, y) {
     host.style.setProperty('display', 'none', 'important');
     hlEl.style.setProperty('display', 'none', 'important');
-    // Badges live in document.body (above the overlay) with pointer-events:none,
-    // but elementFromPoint can still hit them — hide so clicks resolve to the page el.
+    // Badges are hoverable now (their × needs pointer events), so a hit-test
+    // over one would return the badge instead of the page element — hide them
+    // for the duration of the test.
     var hiddenBadges = [];
     for (var bi = 0; bi < collected.length; bi++) {
       var bEl = collected[bi].badgeEl;
@@ -502,9 +516,10 @@
     if (currentEl) hlEl.style.setProperty('display', 'block', 'important');
     for (var ri = 0; ri < hiddenBadges.length; ri++) hiddenBadges[ri].style.display = '';
     // Never pick our own badge / toast chrome
-    if (el && (el.id === 'ctp-lite-toast' || (el.style && el.style.zIndex === '2147483647' && el.parentElement === document.body && el !== hlEl))) {
-      // badge divs carry only a numeric label; fall through to element below via coords offset
-      // (badges are pointer-events:none so this is rare, but guard anyway)
+    if (el && (el.id === 'ctp-lite-toast' || (el.style && el.style.zIndex === '2147483647' &&
+        (el.parentElement === document.body || el.parentElement === document.documentElement) && el !== hlEl))) {
+      // badge divs carry only a number and a ×; fall through to element below via coords offset
+      // (badges are hidden above so this is rare, but guard anyway)
     }
     return el;
   }
@@ -956,10 +971,36 @@
     var rect;
     try { rect = item.el.getBoundingClientRect(); } catch (e) { return; }
     var b = document.createElement('div');
-    b.textContent = String(item.n);
-    b.style.cssText = 'position:fixed;z-index:2147483647;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#FFD700;color:#1E3A5F;font:700 12px/20px -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,0.3);';
+    b.className = 'ctp-badge';
+    // The number gets its own span so renumbering can rewrite just that text —
+    // assigning textContent on the badge itself would wipe the × out of every
+    // other badge on the next removal. The base look stays inline; the hover
+    // rules for the × live in injectedStyle (top of this file).
+    var num = document.createElement('span');
+    num.className = 'ctp-badge-n';
+    num.textContent = String(item.n);
+    var x = document.createElement('button');
+    x.className = 'ctp-badge-x';
+    x.type = 'button';
+    x.textContent = '\u00d7';
+    x.title = 'Remove this path';
+    x.setAttribute('aria-label', 'Remove this path');
+    x.addEventListener('click', function (e) {
+      // The badge is not in the picker's shadow tree, so the overlay never sees
+      // this click — but document-level listeners do receive it bubbled.
+      e.preventDefault();
+      e.stopPropagation();
+      removeItem(item.el);
+    });
+    b.appendChild(num);
+    b.appendChild(x);
+    b.style.cssText = 'position:fixed;z-index:2147483647;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#FFD700;color:#1E3A5F;font:700 12px/20px -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.3);';
     positionBadge(b, rect);
-    document.body.appendChild(b);
+    // A direct child of <html>, appended after the picker host: both sit at
+    // z-index 2147483647 in the root stacking context, so tree order decides —
+    // and a badge parked in <body> would land *under* the overlay (and could
+    // never be hovered). Keep it here.
+    document.documentElement.appendChild(b);
     item.badgeEl = b;
     if (!item.origOutline) item.origOutline = item.el.style.outline;
     try { item.el.style.outline = '2px dashed rgba(255,180,0,0.7)'; } catch (e) {}
@@ -990,7 +1031,11 @@
   function renumberBadges() {
     for (var i = 0; i < collected.length; i++) {
       collected[i].n = i + 1;
-      if (collected[i].badgeEl) collected[i].badgeEl.textContent = String(i + 1);
+      var b = collected[i].badgeEl;
+      // Rewrite only the number span: assigning textContent on the badge itself
+      // would blow away the × button hidden inside it.
+      var n = b && b.querySelector ? b.querySelector('.ctp-badge-n') : null;
+      if (n) n.textContent = String(i + 1);
     }
   }
 
@@ -1129,9 +1174,20 @@
           bView.textContent = expanded ? 'Hide Path' : 'View Path';
         });
 
+        var bRm = document.createElement('button');
+        bRm.className = 'rm-one';
+        bRm.textContent = '\u00d7';
+        bRm.title = 'Remove this path';
+        bRm.setAttribute('aria-label', 'Remove this path');
+        bRm.addEventListener('click', function (e) {
+          e.stopPropagation();
+          removeItem(item.el);
+        });
+
         actions.appendChild(bCopy);
         actions.appendChild(bNote);
         actions.appendChild(bView);
+        actions.appendChild(bRm);
         body.appendChild(p);
         body.appendChild(actions);
 

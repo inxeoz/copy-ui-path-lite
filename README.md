@@ -84,8 +84,16 @@ Edit `templates/picker_ui.j2`. The backend binds to the UI by **element id** and
   `active` (`#multiBtn`, settings tabs), `open` (`#dialog`, `.preview-actions`),
   `has-items` (`#queue-list`), `closing`, `frozen` (`#dialog` / `#overlay`), plus the
   queue row classes `preview-row`, `n`, `path-text`, `preview-body`, `row-actions`
-  (`copy-one`, `add-note`, `view-one`), `preview-notes` / `note` / `note-editor`,
-  and `expanded` (a row whose full path is showing)
+  (`copy-one`, `add-note`, `view-one`, `rm-one`), `preview-notes` / `note` /
+  `note-editor`, and `expanded` (a row whose full path is showing)
+
+The numbered page badges are the one piece of chrome the template cannot style:
+they are appended to `document.documentElement` (not the shadow tree, and not
+`<body>` — a badge parked there would land *under* the overlay and could never be
+hovered). Their rules live in the `<style>` injected by `src/picker.core.js`
+(`injectedStyle`), and the hooks are `ctp-badge` (wrapper), `ctp-badge-n` (the
+number — the only span renumbering rewrites) and `ctp-badge-x` (the hover-revealed
+`×`, `display:none` until the badge is hovered).
 
 `#settingsPanel` starts `hidden` and is toggled by `#configBtn`. Keep it out of the
 dialog's normal flow (`position: absolute; bottom: 100%`) — a fixed, auto-height box
