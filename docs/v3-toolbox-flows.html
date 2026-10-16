@@ -1,0 +1,167 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V3 pill — consistent system + 2 new styles</title>
+<style>
+:root{--bg:#1f1f23;--bd:#2e2e33;--ink:#f5f5f5;--mut:#a3a3a3;--acc:#f97316;--acci:#111;--ok:#22c55e;--ghost:#232327;--gbd:#3f3f46}
+*{box-sizing:border-box}body{margin:0;background:#161616;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:26px}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:15px;margin:0}.sub{color:var(--mut);font-size:12px;margin:4px 0 0}
+.card{background:#1a1a1d;border:1px solid var(--bd);border-radius:12px;padding:16px}
+.card h2{font-size:13px;margin:0}.card h2 span{color:var(--mut);font-weight:400}.card p{font-size:11.5px;color:var(--mut);margin:6px 0 12px;line-height:1.6}
+code{color:#fdba74;font-size:11px}
+.demo{background:#101012;border-radius:8px;min-height:120px;display:flex;align-items:flex-start;justify-content:center;padding:26px 12px 18px;position:relative;overflow:hidden}
+.demo.light{background:#e8ecf3}.demo.light::before{color:#94a3b8}
+.demo::before{content:"live page — section[1] > form[2] > button#sign-in  [58×32]";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#3f3f46;font-size:11px}
+/* ── CONSISTENT TOOLBAR SYSTEM ── */
+.tb{--tbg:var(--bg);--tbd:var(--bd);--tink:var(--ink);--tmut:var(--mut);--tacc:var(--acc);--tacci:var(--acci);
+display:flex;align-items:center;gap:4px;background:var(--tbg);border:1px solid var(--tbd);border-radius:999px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:5px 8px;position:relative;z-index:2;color:var(--tink)}
+.tb.frozen{border-color:var(--ok)}
+.tbtn{border:none;background:none;color:var(--tink);width:32px;height:32px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.tbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn:hover{background:color-mix(in srgb,var(--tink) 10%,transparent)}
+.tbtn.active{background:var(--tacc);color:var(--tacci)}
+.tbtn:disabled{opacity:.3;cursor:not-allowed}
+.tbtn.copied{background:var(--ok);color:#fff}
+.tsel{height:32px;border:1px solid var(--gbd);border-radius:9px;background:#18181b;color:var(--ink);font-size:11.5px;padding:0 8px;font-family:inherit;cursor:pointer;flex-shrink:0}
+.tpill{height:32px;padding:0 14px;border-radius:999px;background:var(--tacc);color:var(--tacci);font-weight:700;font-size:12px;display:inline-flex;align-items:center;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;flex-shrink:0}
+.tpill.copied{background:var(--ok);color:#fff}
+.trev{height:32px;padding:0 10px;border-radius:9px;font-size:11.5px;color:var(--tmut);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer;border:none;background:none;font-family:inherit;flex-shrink:0}
+.trev:hover{background:color-mix(in srgb,var(--tink) 10%,transparent)}
+.trev b{color:var(--tacc);font-weight:800}
+.tsep{width:1px;height:20px;background:var(--gbd);margin:0 4px;flex-shrink:0}
+.tgrip{color:var(--tmut);font-size:11px;padding:0 4px;letter-spacing:2px;cursor:move;flex-shrink:0}
+/* popover — same radii/controls */
+.pop{position:relative;z-index:2;background:var(--bg);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);width:100%;max-width:600px;margin-top:8px;overflow:hidden;font-size:11.5px}
+.pop .ph{padding:8px 12px;background:#27272a;color:#fdba74;font-weight:700;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.pop .pb{padding:10px 12px;background:#18181b;max-height:190px;overflow:auto}
+.prow{display:flex;align-items:center;gap:8px;padding:0 8px;height:32px;margin:5px 0;background:var(--ghost);border:1px solid var(--bd);border-radius:9px;font-size:11.5px}
+.prow .n{background:var(--acc);color:var(--acci);border-radius:4px;font-weight:800;padding:0 6px;font-size:11px}
+.prow .x{margin-left:auto;color:#f87171;background:none;border:none;cursor:pointer;font-size:14px}
+.tabs{display:flex;gap:6px;padding:8px 12px 0;background:var(--bg)}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--mut);font-size:12px;padding:6px 10px;cursor:pointer;font-family:inherit}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.trow{display:flex;align-items:center;gap:8px;padding:0 8px;height:32px;border:1px solid var(--bd);border-radius:9px;margin:5px 0;background:var(--ghost);font-size:11.5px}
+.trow small{color:var(--mut);margin-left:auto}.trow input{accent-color:var(--acc)}
+.preset{height:28px;padding:0 12px;border:1px solid var(--gbd);border-radius:999px;background:var(--ghost);color:var(--ink);cursor:pointer;font-family:inherit;font-size:11px;display:inline-flex;align-items:center}
+.preset.solid{background:var(--acc);border-color:var(--acc);color:var(--acci);font-weight:700}
+.pbtn{height:32px;padding:0 12px;border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;display:inline-flex;align-items:center}
+.pbtn.solid{background:var(--acc);border:none;color:var(--acci);font-weight:700;flex:1;justify-content:center}
+.pbtn.ghost{background:var(--ghost);border:1px solid var(--gbd);color:var(--ink)}
+.psel{height:32px;border-radius:9px;background:#18181b;color:var(--ink);border:1px solid var(--gbd);font-size:11.5px;padding:0 8px;font-family:inherit}
+.toast{position:relative;z-index:2;background:var(--ok);color:#fff;font-family:inherit;font-size:12px;padding:8px 16px;border-radius:9px;margin-top:8px}
+.demo{overflow:visible}
+/* ── hover alt annotations ── */
+.tbtn[data-tip],.tpill[data-tip],.trev[data-tip],.tsel[data-tip],.tgrip[data-tip]{position:relative;overflow:visible}
+.tbtn[data-tip]::after,.tpill[data-tip]::after,.trev[data-tip]::after,.tgrip[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0c0c0e;border:1px solid var(--gbd);color:var(--ink);font-family:inherit;font-size:10.5px;font-weight:400;padding:4px 8px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:50}
+.tbtn[data-tip]:hover::after,.tpill[data-tip]:hover::after,.trev[data-tip]:hover::after,.tgrip[data-tip]:hover::after{opacity:1}
+.show-tips .tbtn[data-tip]::after,.show-tips .tpill[data-tip]::after,.show-tips .trev[data-tip]::after,.show-tips .tgrip[data-tip]::after{opacity:1}
+.flowtag{display:inline-block;font-size:10px;background:#27272a;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;color:var(--mut);margin-bottom:8px}
+kbd{background:#2c2c31;border:1px solid var(--gbd);border-radius:4px;padding:0 5px;font-size:10.5px}
+table.spec{font-size:11px;border-collapse:collapse;width:100%;margin:0 0 12px}
+table.spec td,table.spec th{border:1px solid var(--bd);padding:6px 8px;text-align:left}table.spec th{color:var(--mut);font-weight:400}
+/* ── STYLE S1: paper frost ── */
+.theme-paper{--tbg:rgba(255,255,255,.88);--tbd:#dbe2ef;--tink:#0f172a;--tmut:#64748b;--tacc:#16a34a;--tacci:#fff}
+.theme-paper.tb{backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(15,23,42,.18);border-radius:14px}
+.theme-paper .tsel{background:#fff;border-color:#cbd5e1;color:#0f172a}
+/* ── STYLE S2: mono outline ── */
+.theme-mono{--tbg:#111113;--tbd:#2a2a2e;--tink:#e4e4e7;--tmut:#71717a;--tacc:#e4e4e7;--tacci:#111113}
+.theme-mono.tb{border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.55)}
+.theme-mono .tbtn.active{background:#2e9bff;color:#fff}
+.theme-mono .tpill{background:none;border:1px solid #3f3f46;color:#e4e4e7}
+.theme-mono .tsel{background:#111113;border-color:#2a2a2e;color:#e4e4e7;text-transform:uppercase;font-size:10px;letter-spacing:.06em}
+.theme-mono .trev{text-transform:uppercase;font-size:10px;letter-spacing:.06em}
+</style></head><body><div class="wrap">
+<h1>V3 pill — consistent system + 2 new styles</h1>
+<p class="sub">Fix: one size for every control. All icon buttons <code>32×32 / r9</code>, selects + Review + Copy all <code>h32 / r9</code>, pill <code>h32 / pill</code>, icons 16px stroke 1.8, gap 4px. Previously: 5 different heights, 4 radii, mixed emoji weights.</p>
+
+<div class="card"><h2>Consistency spec <span>(applies to every flow below)</span></h2>
+<table class="spec"><tr><th>Element</th><th>Size</th><th>Radius</th><th>State</th></tr>
+<tr><td>grip <code>⋮⋮</code> / icon <code>.tbtn</code> / sep</td><td>32×32 · sep h20</td><td>9</td><td>hover 10% tint · active = accent fill · disabled 30%</td></tr>
+<tr><td>select <code>.tsel</code> / review <code>.trev</code></td><td>h32</td><td>9</td><td>same border <code>--gbd</code>, same font 11.5px</td></tr>
+<tr><td>copy <code>.tpill</code> / pop buttons <code>.pbtn</code></td><td>h32</td><td>pill / 9</td><td>solid accent · copied = green</td></tr>
+<tr><td>popover rows <code>.prow .trow</code> / toast / preset</td><td>h32 / h28</td><td>9 / pill</td><td>one border color, one font</td></tr></table>
+<p>Icons: single SVG set (cursor, +, chevron-L/R, eye, gear, copy, list, dots, x) — replaces mixed ➤＋↩👁⧉ emoji. Frozen = green border on bar, not per-button color.</p></div>
+
+<div class="card"><h2>▶ Live master — click through <span>(consistent build)</span></h2>
+<p>Try: <kbd>+</kbd> Add+, <kbd>Review</kbd> queue, <kbd>⚙</kbd> config, <kbd>⋯</kbd> toolbar tab, <kbd>Copy path</kbd> toast.</p>
+<div class="demo"><div style="width:100%;max-width:660px">
+<div class="tb" id="m-bar"><span class="tgrip" data-tip="Drag to move">⋮⋮</span>
+<button class="tbtn active" data-tip="Select — hover to preview"><svg viewBox="0 0 24 24"><path d="M6 3l14 9-7 2-3 7z"/></svg></button><span class="tsep"></span><button class="tbtn" id="m-add" data-tip="Add+ — multi-pick on/off"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="tbtn" data-tip="To Child"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="tbtn" data-tip="To Parent"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="tbtn" id="m-eye" data-tip="Freeze — lock target"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button><span class="tsep"></span><select class="tsel" title="Format: Context / XPath / CSS / PW"><option>Context</option><option>XPath</option><option>CSS</option><option>PW</option></select><button class="tbtn" id="m-cfgbtn" data-tip="Style props — computed"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.07-.4.1-.8.1-1.2z"/></svg></button><button class="tbtn" data-tip="Copy Selected id"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><span class="tsep"></span><button class="tpill" id="m-copy" data-tip="Copy path — click or Enter">Copy path</button><button class="trev" id="m-rev" data-tip="Review queue — N picked">Review <b id="m-n">2</b> ▾</button><button class="tbtn" id="m-more" data-tip="Customize toolbar">···</button><button class="tbtn" data-tip="Quit — Esc"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<div class="pop" id="m-queue" style="display:none"><div class="ph"><span>Review — 2 picked</span><span>✕</span></div>
+<div class="pb"><div class="prow"><span class="n">1</span> section[1] &gt; form[2] &gt; button#sign-in<button class="x">×</button></div><div class="prow"><span class="n">2</span> aside[1]/nav[1]/a[3](settings)<button class="x">×</button></div></div>
+<div style="display:flex;gap:8px;padding:8px 12px;border-top:1px solid var(--bd);align-items:center;background:var(--bg)"><select class="psel" style="flex:1"><option>newline</option><option>numbered</option><option>comma</option><option>JSON</option></select><button class="pbtn solid">Copy All (2)</button><button class="pbtn ghost">Clear</button><label style="font-size:11px;color:var(--mut)"><input type="checkbox"> close-after</label></div></div>
+<div class="pop" id="m-cfg" style="display:none"><div class="ph"><span>⚙ Settings</span><span style="cursor:pointer" onclick="document.getElementById('m-cfg').style.display='none'">✕</span></div>
+<div class="tabs"><button id="t1" class="on">Style props</button><button id="t2">Toolbar</button></div>
+<div class="pb" id="p1"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><button class="preset">color only</button><button class="preset">essentials</button><button class="preset">typography</button><button class="preset">box</button><button class="preset">all</button><button class="preset">clear</button></div>
+<label style="display:block;padding:3px 0"><input type="checkbox" checked> color</label><label style="display:block;padding:3px 0"><input type="checkbox" checked> background-color</label><label style="display:block;padding:3px 0"><input type="checkbox"> font-size</label><label style="display:block;padding:3px 0"><input type="checkbox"> z-index</label>
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><button class="preset">Cancel</button><button class="preset solid">Save</button></div></div>
+<div class="pb" id="p2" style="display:none"><p style="margin:0 0 6px">Toggle + drag to reorder → <code>localStorage[ctp-lite-toolbar]</code>.</p>
+<div class="trow"><span style="color:var(--mut)">⠿</span><input type="checkbox" checked> select <small>locked</small></div>
+<div class="trow"><span style="color:var(--mut)">⠿</span><input type="checkbox" checked> + add</div>
+<div class="trow"><span style="color:var(--mut)">⠿</span><input type="checkbox" checked> walk</div>
+<div class="trow"><span style="color:var(--mut)">⠿</span><input type="checkbox"> freeze <small>hidden → ⋯</small></div>
+<div class="trow"><span style="color:var(--mut)">⠿</span><input type="checkbox" checked> copy-id</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><button class="preset">Reset</button><button class="preset solid">Done</button></div></div></div>
+<div class="toast" id="m-toast" style="display:none">Copied context: button#sign-in [92%]</div>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);
+$('m-add').onclick=e=>{e.currentTarget.classList.toggle('active');$('m-n').textContent=e.currentTarget.classList.contains('active')?'3':'2';};
+$('m-rev').onclick=()=>{const q=$('m-queue');q.style.display=q.style.display==='none'?'block':'none';$('m-cfg').style.display='none';};
+$('m-more').onclick=()=>{$('m-cfg').style.display='block';$('m-queue').style.display='none';showTab(2);};
+$('m-cfgbtn').onclick=()=>{$('m-cfg').style.display=$('m-cfg').style.display==='none'?'block':'none';$('m-queue').style.display='none';showTab(1);};
+$('m-copy').onclick=()=>{const t=$('m-toast');t.style.display='block';$('m-copy').textContent='Copied!';$('m-copy').classList.add('copied');setTimeout(()=>{t.style.display='none';$('m-copy').textContent='Copy path';$('m-copy').classList.remove('copied');},1400);};
+$('m-eye').onclick=e=>{e.currentTarget.classList.toggle('active');$('m-bar').classList.toggle('frozen');};
+function showTab(n){$('t1').classList.toggle('on',n===1);$('t2').classList.toggle('on',n===2);$('p1').style.display=n===1?'block':'none';$('p2').style.display=n===2?'block':'none';}
+$('t1').onclick=()=>showTab(1);$('t2').onclick=()=>showTab(2);
+</script></div>
+
+<div class="card"><h2>Icon alt annotations <span>(hover any button above — full map below)</span></h2>
+<p>Hover shows a <code>data-tip</code> bubble under the button (10.5px, <code>#0c0c0e / #3f3f46</code>). Same strings become real <code>title</code> + <code>aria-label</code> in <code>picker_ui.j2</code>. Pinned preview so you can read them all at once:</p>
+<div class="demo"><div class="tb show-tips"><span class="tgrip" data-tip="Drag to move">⋮⋮</span><button class="tbtn active" data-tip="Select — hover to preview"><svg viewBox="0 0 24 24"><path d="M6 3l14 9-7 2-3 7z"/></svg></button><button class="tbtn" data-tip="Add+ — multi-pick on/off"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="tbtn" data-tip="To Child"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="tbtn" data-tip="Copy path — click or Enter">⧉</button><button class="tbtn" data-tip="Quit — Esc"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+<table class="spec"><tr><th>Icon</th><th>Alt / tooltip</th><th>id</th></tr>
+<tr><td>⋮⋮</td><td>Drag to move</td><td><code>#dialog-header</code></td></tr>
+<tr><td>➤ cursor</td><td>Select — hover to preview</td><td><code>#overlay</code></td></tr>
+<tr><td>＋</td><td>Add+ — multi-pick on/off</td><td><code>#multiBtn</code></td></tr>
+<tr><td>‹ ›</td><td>To Child / To Parent</td><td><code>#stepBackBtn #stepNextBtn</code></td></tr>
+<tr><td>👁 eye</td><td>Freeze — lock target</td><td><code>#dialog.frozen</code></td></tr>
+<tr><td>format ▾</td><td>Format: Context / XPath / CSS / PW (native title)</td><td><code>#format-select</code></td></tr>
+<tr><td>⚙</td><td>Style props — computed</td><td><code>#configBtn</code></td></tr>
+<tr><td>⧉</td><td>Copy Selected id</td><td><code>#copyIdBtn</code></td></tr>
+<tr><td>Copy path</td><td>Copy path — click or Enter</td><td><code>#copyBtn</code></td></tr>
+<tr><td>Review N</td><td>Review queue — N picked</td><td><code>#queue-count</code></td></tr>
+<tr><td>⋯</td><td>Customize toolbar</td><td><code>#toolbar-pop</code></td></tr>
+<tr><td>✕</td><td>Quit — Esc</td><td><code>#quitBtn</code></td></tr></table></div>
+
+<div class="card"><span class="flowtag">F1–F6 unchanged, now consistent</span><h2>All flows reuse the bar above</h2>
+<p>F1 hover/copy · F2 Add+→Review drawer · F3 freeze/walk (green ring) · F4 ⚙ style tab · F5 ⋯ toolbar tab (toggle+reorder+reset) · F6 toast/exit. Only change vs previous file: every button/select/pill/row rebuilt with <code>.tbtn .tsel .tpill .trev .prow .trow .pbtn</code> so heights, radii, hovers match.</p></div>
+
+<div class="card"><h2>Style S1 — Paper Frost <span>(light glass · paper.json)</span></h2>
+<p>Same layout, paper tokens: <code>bg rgba(255,255,255,.88)+blur / bd #dbe2ef / ink #0f172a / accent #16a34a</code>, radius 14, soft shadow. For light pages. Auto-switch option: <code>matchMedia(prefers-color-scheme)</code>.</p>
+<div class="demo light"><div style="width:100%;max-width:660px">
+<div class="tb theme-paper"><span class="tgrip">⋮⋮</span>
+<button class="tbtn active" style="background:#16a34a;color:#fff"><svg viewBox="0 0 24 24"><path d="M6 3l14 9-7 2-3 7z"/></svg></button><span class="tsep" style="background:#dbe2ef"></span><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><select class="tsel"><option>Context</option><option>XPath</option><option>CSS</option></select><button class="tbtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button><span class="tsep" style="background:#dbe2ef"></span><button class="tpill" style="background:#16a34a;color:#fff">Copy path</button><button class="trev" style="color:#64748b">Review <b style="color:#16a34a">2</b> ▾</button><button class="tbtn">···</button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<div class="pop" style="background:#fff;border-color:#dbe2ef"><div class="ph" style="background:#1E3A5F;color:#FFD700"><span>Review — 2 picked</span><span>✕</span></div><div class="pb" style="background:#f8fafc"><div class="prow" style="background:#fff;border-color:#e2e8f0;color:#0f172a"><span class="n" style="background:#1E3A5F;color:#FFD700">1</span> section[1] &gt; button#sign-in<button class="x">×</button></div><div class="prow" style="background:#fff;border-color:#e2e8f0;color:#0f172a"><span class="n" style="background:#1E3A5F;color:#FFD700">2</span> a[3](settings)<button class="x">×</button></div></div></div>
+</div></div></div>
+
+<div class="card"><h2>Style S2 — Mono Outline <span>(Linear-like · matches your reference)</span></h2>
+<p>Same layout, monochrome: <code>bg #111113 / bd #2a2a2e / text #e4e4e7</code>, active select = blue <code>#2e9bff</code>, Copy = outline (no fill), format/review uppercase 10px tracked, radius 10. Closest to your screenshot — quiet until action.</p>
+<div class="demo"><div style="width:100%;max-width:660px">
+<div class="tb theme-mono"><span class="tgrip">⋮⋮</span>
+<button class="tbtn active"><svg viewBox="0 0 24 24"><path d="M6 3l14 9-7 2-3 7z"/></svg></button><span class="tsep"></span><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button><span class="tsep"></span><select class="tsel"><option>CONTEXT</option><option>XPATH</option><option>CSS</option></select><button class="tbtn"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><span class="tsep"></span><button class="tpill">Copy path</button><button class="trev">REVIEW <b>3</b></button><button class="tbtn">···</button><button class="tbtn"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+</div></div></div>
+
+<div class="card"><h2>Style S3 — Grid stack × Mono Outline <span>(3 rows, S2 theme)</span></h2>
+<p>Same <code>.tbtn .tsel .tpill</code> parts, stacked as 3 full-width rows in a 264px dock block (r10, mono tokens). Grip docked top-right. Row1 pick · Row2 output · Row3 commit. Toggle in <code>⋯ → Toolbar → Layout: bar / grid</code> — just flips <code>#dialog{flex-direction:column}</code>.</p>
+<div class="demo"><div class="stack theme-mono" style="position:relative;z-index:2;width:264px;display:flex;flex-direction:column;gap:6px;background:#111113;border:1px solid #2a2a2e;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.55);padding:8px">
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><button class="tbtn active" data-tip="Select — hover to preview"><svg viewBox="0 0 24 24"><path d="M6 3l14 9-7 2-3 7z"/></svg></button><button class="tbtn" data-tip="Add+ — multi-pick on/off"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="tbtn" data-tip="To Child"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="tbtn" data-tip="To Parent"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="tbtn" data-tip="Freeze — lock target"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button><span style="flex:1"></span><button class="tbtn" data-tip="Quit — Esc"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="tgrip" data-tip="Drag to move">⋮⋮</span></div>
+<div style="height:1px;background:#2a2a2e"></div>
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><select class="tsel" style="flex:1" title="Format: Context / XPath / CSS"><option>CONTEXT</option><option>XPATH</option><option>CSS</option></select><button class="tbtn" data-tip="Style props — computed"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button><button class="tbtn" data-tip="Copy Selected id"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="tbtn" data-tip="Customize toolbar">···</button></div>
+<div style="height:1px;background:#2a2a2e"></div>
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><button class="trev" style="flex:1;justify-content:center" data-tip="Review queue — 3 picked">REVIEW <b>3</b> ▾</button><select class="tsel" style="flex:1" title="Separator: newline / numbered / comma / JSON"><option>NEWLINE</option><option>NUMBERED</option><option>COMMA</option><option>JSON</option></select></div>
+<div style="font-size:10.5px;color:#71717a;padding:6px 8px;background:#0c0c0e;border:1px solid #2a2a2e;border-radius:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">section[1] &gt; form[2] &gt; <code>button#sign-in</code></div>
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><button class="tpill" style="flex:1;justify-content:center;width:100%" data-tip="Copy path — click or Enter">Copy path</button></div>
+</div></div></div>
+
+<div class="card"><h2>What changed + build <span>(template-only)</span></h2>
+<p>1. Unified classes (<code>.tbtn .tsel .tpill .trev .tsep .tgrip .pbtn .psel .prow .trow</code>) — one height (32), two radii (9/pill), one icon stroke (16/1.8), one hover.<br>2. S1/S2 are pure token swaps (<code>.theme-paper / .theme-mono</code> override <code>--tbg --tbd --tink --tmut --tacc</code>) — same ids, same <code>picker_ui.j2</code> structure; add <code>data-theme</code> attr to switch.<br>3. S3 grid reuses the same rows in a column dock (<code>.stack</code>) — layout toggle only, no new ids.<br>4. Recommend: ship carbon (default) + mono as <code>prefers-color-scheme / manual toggle in ⋯ → Toolbar → Theme</code>.</p></div>
+</div></body></html>

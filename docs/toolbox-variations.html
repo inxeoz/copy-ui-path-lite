@@ -1,0 +1,80 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>copy-ui-path-lite — toolbox variations</title>
+<style>
+:root{--bg:#1f1f23;--bd:#2e2e33;--hd:#27272a;--ink:#f5f5f5;--mut:#a3a3a3;--acc:#f97316;--acc-ink:#111;--ok:#22c55e;--ghost:#232327;--gbd:#3f3f46}
+body{margin:0;background:#161616;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:28px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1{font-size:16px;margin:0} p.sub{color:var(--mut);font-size:12px;margin:4px 0 0}
+.card{background:#1a1a1d;border:1px solid var(--bd);border-radius:12px;padding:18px}
+.card h2{font-size:13px;margin:0 0 4px} .card p{font-size:11.5px;color:var(--mut);margin:0 0 14px}
+.demo{background:checker;background:#101012;border-radius:8px;min-height:120px;display:flex;align-items:flex-start;justify-content:center;padding:28px 12px;position:relative;overflow:hidden}
+/* fake page behind */
+.demo::before{content:"section[1] > form[2] > button#sign-in";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#3f3f46;font-size:12px}
+/* shared toolbox */
+.tb{display:flex;align-items:center;gap:2px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:6px 8px;position:relative;z-index:1;font-size:13px}
+.tb button{border:none;background:none;color:var(--ink);width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.tb button:hover{background:#2c2c31}
+.tb button.active{background:var(--acc);color:var(--acc-ink)}
+.tb button:disabled{opacity:.35}
+.tb .sep{width:1px;height:22px;background:var(--gbd);margin:0 4px;flex-shrink:0}
+.tb .grip{cursor:move;color:var(--mut);letter-spacing:2px;font-size:12px;padding:0 4px}
+.tb .pill{font-size:11px;font-weight:700;background:var(--acc);color:var(--acc-ink);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.tb select{background:#18181b;color:var(--ink);border:1px solid var(--gbd);border-radius:7px;font-size:11px;padding:5px 6px;font-family:inherit}
+.tb .count{font-size:11px;font-weight:800;color:var(--acc);white-space:nowrap;padding:0 4px}
+.tb .lbl{font-size:12px;color:var(--mut);padding:0 8px;white-space:nowrap}
+.preview{position:relative;z-index:1;background:var(--bg);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden;max-width:640px;width:100%}
+.preview .path{padding:8px 12px;font-size:11px;background:#18181b;border-top:1px solid var(--bd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview .path b{color:#fdba74;font-weight:400}
+.q{max-height:110px;overflow:auto}
+.qrow{display:flex;gap:8px;align-items:center;padding:6px 10px;margin:6px 10px;background:var(--ghost);border:1px solid var(--bd);border-radius:7px;font-size:11px}
+.qrow .n{background:var(--acc);color:var(--acc-ink);border-radius:4px;font-weight:800;padding:0 6px}
+.qrow .x{margin-left:auto;color:#f87171}
+code{color:#fdba74}
+table{font-size:11px;border-collapse:collapse;width:100%;margin-top:12px}
+td,th{border:1px solid var(--bd);padding:6px 8px;text-align:left} th{color:var(--mut)}
+</style></head><body><div class="wrap">
+<h1>copy-ui-path-lite — toolbox variations</h1>
+<p class="sub">Re-skin of current dialog (<code>#dialog</code> bottom-right) as horizontal floating toolbox like your reference bar. All use carbon tokens. No backend change — same ids, rearranged.</p>
+
+<div class="card"><h2>V1 — 1:1 clone of reference (recommended)</h2>
+<p>Top-center pill. Drag → select(active blue→orange) → add+ → child/parent → freeze(eye) → format → copy-id ⧉ → <b>Review = queue count / opens list</b> → trash = clear → sep ⇄ → ✕. Path preview as tooltip/second row only on hover.</p>
+<div class="demo"><div><div class="tb">
+<span class="grip">⋮⋮</span><button class="active" title="picker active (select)">➤</button><button title="move / drag dialog">✥</button><button title="Add+ multi-pick [multiBtn]">⊕</button><button title="To Child [stepBackBtn]">↩</button><button title="To Parent [stepNextBtn]">↪</button><button title="freeze (right-click) [frozen]">👁</button><span class="sep"></span><button title="Copy Selected id [copyIdBtn]">⧉</button><select title="format [format-select]"><option>Context</option><option>XPath</option><option>CSS</option><option>PW</option></select><span class="lbl">Review <span class="count">3 picked</span></span><span class="sep"></span><button title="Clear [clearBtn]">🗑</button><button title="separator [sep-select]">⇄</button><button title="Quit [quitBtn]">✕</button>
+</div><div class="preview" style="margin-top:8px"><div class="path">checkout | section[1] &gt; form[2] &gt; <b>button#sign-in</b> &nbsp; <span style="color:#a3a3a3">[58×32]</span></div></div></div></div>
+</div>
+
+<div class="card"><h2>V2 — toolbox + expandable queue drawer</h2>
+<p>Same bar, <code>Review</code> toggles <code>#queue-list + #multi-actions</code> dropdown. Keeps Copy All / separator inside drawer so bar stays short.</p>
+<div class="demo"><div style="width:100%;max-width:640px"><div class="tb" style="border-radius:12px 12px 0 0">
+<span class="grip">⋮⋮</span><button class="active">➤</button><button title="Add+">＋</button><button>⤺</button><button>⤻</button><select><option>Context</option></select><button title="style">⚙</button><button title="Copy path" style="width:auto;padding:0 12px;background:var(--acc);color:var(--acc-ink);font-weight:700;font-size:12px">Copy path</button><span class="lbl">Review (3) ▾</span><button>✕</button>
+</div><div class="preview" style="border-radius:0 0 12px 12px;border-top:none">
+<div class="q"><div class="qrow"><span class="n">1</span> section[1] &gt; form[2] &gt; button#sign-in <span class="x">×</span></div><div class="qrow"><span class="n">2</span> aside[1]/nav[1]/a[3](settings) <span class="x">×</span></div><div class="qrow"><span class="n">3</span> header[1]/search[1]/input#global-search <span class="x">×</span></div></div>
+<div style="display:flex;gap:8px;padding:8px 10px;border-top:1px solid var(--bd);font-size:11px;align-items:center"><select style="flex:1"><option>newline</option><option>numbered</option><option>comma</option><option>JSON</option></select><button style="flex:1;background:var(--acc);color:var(--acc-ink);font-weight:700">Copy All (3)</button><button style="flex:0 0 auto">Clear</button><label style="color:var(--mut);font-size:11px"><input type="checkbox"> close-after</label></div>
+</div></div></div>
+</div>
+
+<div class="card"><h2>V3 — ultra-compact pill (single-pick users)</h2>
+<p>Hides multi-pick until needed. Only: grip → select → format → copy-id → copy-path → ✕. <code>[+ add]</code> expands to V1.</p>
+<div class="demo"><div class="tb" style="border-radius:999px;padding:6px 10px">
+<span class="grip">⋮⋮</span><button class="active">➤</button><span class="sep"></span><select><option>Context</option></select><button title="Copy id">⧉</button><span class="pill">Copy path</span><button>✕</button>
+</div></div>
+</div>
+
+<div class="card"><h2>Icon mapping (current id → toolbox slot)</h2>
+<table><tr><th>Ref slot</th><th>Our control</th><th>id</th></tr>
+<tr><td>➤ blue select</td><td>picker active / hover</td><td><code>#overlay</code> cursor</td></tr>
+<tr><td>✥ move</td><td>drag dialog</td><td><code>#dialog-header</code></td></tr>
+<tr><td>⊕ / ＋</td><td>Add+ toggle</td><td><code>#multiBtn</code></td></tr>
+<tr><td>↩ ↪</td><td>To Child / To Parent</td><td><code>#stepBackBtn #stepNextBtn</code></td></tr>
+<tr><td>👁</td><td>freeze (right-click)</td><td><code>#dialog.frozen #freeze-hint</code></td></tr>
+<tr><td>⧉</td><td>Copy Selected id</td><td><code>#copyIdBtn</code></td></tr>
+<tr><td>format select</td><td>Context/XPath/CSS/PW</td><td><code>#format-select</code></td></tr>
+<tr><td>⚙</td><td>computed style props</td><td><code>#configBtn</code></td></tr>
+<tr><td>Review (N)</td><td>queue count + toggle list</td><td><code>#queue-count #queue-list</code></td></tr>
+<tr><td>🗑</td><td>Clear</td><td><code>#clearBtn</code></td></tr>
+<tr><td>⇄</td><td>separator style</td><td><code>#sep-select</code></td></tr>
+<tr><td>✕</td><td>Quit</td><td><code>#quitBtn</code></td></tr></table>
+<p style="margin-top:10px">Implementation: edit only <code>templates/picker_ui.j2</code> — change <code>#dialog{bottom/right → top:12px;left:50%;transform:translateX(-50%)}</code>, <code>#dialog-body{flex-direction:column}</code>, hide <code>#pane-side</code> border, keep all ids. Backend in <code>src/picker.core.js:598-614</code> needs no change.</p>
+</div>
+</div></body></html>

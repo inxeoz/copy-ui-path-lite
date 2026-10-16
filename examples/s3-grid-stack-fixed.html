@@ -1,0 +1,91 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>V3 pill — consistent system + 2 new styles</title>
+<style>
+:root{--bg:#1f1f23;--bd:#2e2e33;--ink:#f5f5f5;--mut:#a3a3a3;--acc:#f97316;--acci:#111;--ok:#22c55e;--ghost:#232327;--gbd:#3f3f46}
+*{box-sizing:border-box}body{margin:0;background:#161616;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:26px}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:15px;margin:0}.sub{color:var(--mut);font-size:12px;margin:4px 0 0}
+.card{background:#1a1a1d;border:1px solid var(--bd);border-radius:12px;padding:16px}
+.card h2{font-size:13px;margin:0}.card h2 span{color:var(--mut);font-weight:400}.card p{font-size:11.5px;color:var(--mut);margin:6px 0 12px;line-height:1.6}
+code{color:#fdba74;font-size:11px}
+.demo{background:#101012;border-radius:8px;min-height:120px;display:flex;align-items:flex-start;justify-content:center;padding:26px 12px 18px;position:relative;overflow:hidden}
+.demo.light{background:#e8ecf3}.demo.light::before{color:#94a3b8}
+.demo::before{content:"live page — section[1] > form[2] > button#sign-in  [58×32]";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#3f3f46;font-size:11px}
+/* ── CONSISTENT TOOLBAR SYSTEM ── */
+.tb{--tbg:var(--bg);--tbd:var(--bd);--tink:var(--ink);--tmut:var(--mut);--tacc:var(--acc);--tacci:var(--acci);
+display:flex;align-items:center;gap:4px;background:var(--tbg);border:1px solid var(--tbd);border-radius:999px;box-shadow:0 12px 40px rgba(0,0,0,.6);padding:5px 8px;position:relative;z-index:2;color:var(--tink)}
+.tb.frozen{border-color:var(--ok)}
+.tbtn{border:none;background:none;color:var(--tink);width:32px;height:32px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.tbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn:hover{background:color-mix(in srgb,var(--tink) 10%,transparent)}
+.tbtn.active{background:var(--tacc);color:var(--tacci)}
+.tbtn:disabled{opacity:.3;cursor:not-allowed}
+.tbtn.copied{background:var(--ok);color:#fff}
+.tsel{height:32px;border:1px solid var(--gbd);border-radius:9px;background:#18181b;color:var(--ink);font-size:11.5px;padding:0 8px;font-family:inherit;cursor:pointer;flex-shrink:0}
+.tpill{height:32px;padding:0 14px;border-radius:999px;background:var(--tacc);color:var(--tacci);font-weight:700;font-size:12px;display:inline-flex;align-items:center;white-space:nowrap;border:none;cursor:pointer;font-family:inherit;flex-shrink:0}
+.tpill.copied{background:var(--ok);color:#fff}
+.trev{height:32px;padding:0 10px;border-radius:9px;font-size:11.5px;color:var(--tmut);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;cursor:pointer;border:none;background:none;font-family:inherit;flex-shrink:0}
+.trev:hover{background:color-mix(in srgb,var(--tink) 10%,transparent)}
+.trev b{color:var(--tacc);font-weight:800}
+.tsep{width:1px;height:20px;background:var(--gbd);margin:0 4px;flex-shrink:0}
+.tgrip{color:var(--tmut);font-size:11px;padding:0 4px;letter-spacing:2px;cursor:move;flex-shrink:0}
+/* popover — same radii/controls */
+.pop{position:relative;z-index:2;background:var(--bg);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.6);width:100%;max-width:600px;margin-top:8px;overflow:hidden;font-size:11.5px}
+.pop .ph{padding:8px 12px;background:#27272a;color:#fdba74;font-weight:700;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.pop .pb{padding:10px 12px;background:#18181b;max-height:190px;overflow:auto}
+.prow{display:flex;align-items:center;gap:8px;padding:0 8px;height:32px;margin:5px 0;background:var(--ghost);border:1px solid var(--bd);border-radius:9px;font-size:11.5px}
+.prow .n{background:var(--acc);color:var(--acci);border-radius:4px;font-weight:800;padding:0 6px;font-size:11px}
+.prow .x{margin-left:auto;color:#f87171;background:none;border:none;cursor:pointer;font-size:14px}
+.tabs{display:flex;gap:6px;padding:8px 12px 0;background:var(--bg)}
+.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--mut);font-size:12px;padding:6px 10px;cursor:pointer;font-family:inherit}
+.tabs button.on{color:var(--acc);border-bottom-color:var(--acc)}
+.trow{display:flex;align-items:center;gap:8px;padding:0 8px;height:32px;border:1px solid var(--bd);border-radius:9px;margin:5px 0;background:var(--ghost);font-size:11.5px}
+.trow small{color:var(--mut);margin-left:auto}.trow input{accent-color:var(--acc)}
+.preset{height:28px;padding:0 12px;border:1px solid var(--gbd);border-radius:999px;background:var(--ghost);color:var(--ink);cursor:pointer;font-family:inherit;font-size:11px;display:inline-flex;align-items:center}
+.preset.solid{background:var(--acc);border-color:var(--acc);color:var(--acci);font-weight:700}
+.pbtn{height:32px;padding:0 12px;border-radius:9px;font-family:inherit;font-size:12px;cursor:pointer;display:inline-flex;align-items:center}
+.pbtn.solid{background:var(--acc);border:none;color:var(--acci);font-weight:700;flex:1;justify-content:center}
+.pbtn.ghost{background:var(--ghost);border:1px solid var(--gbd);color:var(--ink)}
+.psel{height:32px;border-radius:9px;background:#18181b;color:var(--ink);border:1px solid var(--gbd);font-size:11.5px;padding:0 8px;font-family:inherit}
+.toast{position:relative;z-index:2;background:var(--ok);color:#fff;font-family:inherit;font-size:12px;padding:8px 16px;border-radius:9px;margin-top:8px}
+.demo{overflow:visible}
+/* ── hover alt annotations ── */
+.tbtn[data-tip],.tpill[data-tip],.trev[data-tip],.tsel[data-tip],.tgrip[data-tip]{position:relative;overflow:visible}
+.tbtn[data-tip]::after,.tpill[data-tip]::after,.trev[data-tip]::after,.tgrip[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0c0c0e;border:1px solid var(--gbd);color:var(--ink);font-family:inherit;font-size:10.5px;font-weight:400;padding:4px 8px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:50}
+.tbtn[data-tip]:hover::after,.tpill[data-tip]:hover::after,.trev[data-tip]:hover::after,.tgrip[data-tip]:hover::after{opacity:1}
+.show-tips .tbtn[data-tip]::after,.show-tips .tpill[data-tip]::after,.show-tips .trev[data-tip]::after,.show-tips .tgrip[data-tip]::after{opacity:1}
+.flowtag{display:inline-block;font-size:10px;background:#27272a;border:1px solid var(--bd);border-radius:6px;padding:2px 8px;color:var(--mut);margin-bottom:8px}
+kbd{background:#2c2c31;border:1px solid var(--gbd);border-radius:4px;padding:0 5px;font-size:10.5px}
+table.spec{font-size:11px;border-collapse:collapse;width:100%;margin:0 0 12px}
+table.spec td,table.spec th{border:1px solid var(--bd);padding:6px 8px;text-align:left}table.spec th{color:var(--mut);font-weight:400}
+/* ── STYLE S1: paper frost ── */
+.theme-paper{--tbg:rgba(255,255,255,.88);--tbd:#dbe2ef;--tink:#0f172a;--tmut:#64748b;--tacc:#16a34a;--tacci:#fff}
+.theme-paper.tb{backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(15,23,42,.18);border-radius:14px}
+.theme-paper .tsel{background:#fff;border-color:#cbd5e1;color:#0f172a}
+/* ── STYLE S2: mono outline ── */
+.theme-mono{--tbg:#111113;--tbd:#2a2a2e;--tink:#e4e4e7;--tmut:#71717a;--tacc:#e4e4e7;--tacci:#111113}
+.theme-mono.tb{border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.55)}
+.theme-mono .tbtn.active{background:#2e9bff;color:#fff}
+.theme-mono .tpill{background:none;border:1px solid #3f3f46;color:#e4e4e7}
+.theme-mono .tsel{background:#111113;border-color:#2a2a2e;color:#e4e4e7;text-transform:uppercase;font-size:10px;letter-spacing:.06em}
+.theme-mono .trev{text-transform:uppercase;font-size:10px;letter-spacing:.06em}
+
+.fixed-block { width: 280px !important; height: 232px !important; padding: 8px !important; overflow: hidden; gap: 4px !important; }
+.fixed-block > .path-row { font-size:10.5px;color:#71717a;padding:6px 8px;background:#0c0c0e;border:1px solid #2a2a2e;border-radius:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; flex: 0 0 auto; }
+.fixed-block .tb { gap: 8px !important; }
+.fixed-block .tbtn { width: 34px !important; height: 34px !important; }
+</style></head>
+<body><div class="wrap">
+<h1>Style S3 — Grid stack × Mono Outline (fixed size)</h1>
+<p class="sub">S3 layout with a fixed toolblock: 280 × 232 px outer. Rows stay fixed-size; only the path label truncates.</p>
+<div class="demo" style="min-height:220px">
+<div class="stack theme-mono fixed-block">
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><button class="tbtn active" data-tip="Select — hover to preview"><svg viewBox="0 0 24 24"><path d="M6 3l14 9-7 2-3 7z"/></svg></button><button class="tbtn" data-tip="Add+ — multi-pick on/off"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="tbtn" data-tip="To Child"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><button class="tbtn" data-tip="To Parent"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button><button class="tbtn" data-tip="Freeze — lock target"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button><span style="flex:1"></span><button class="tbtn" data-tip="Quit — Esc"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><span class="tgrip" data-tip="Drag to move">⋮⋮</span></div>
+<div style="height:1px;background:#2a2a2e"></div>
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><select class="tsel" style="flex:1" title="Format: Context / XPath / CSS"><option>CONTEXT</option><option>XPATH</option><option>CSS</option></select><button class="tbtn" data-tip="Style props — computed"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button><button class="tbtn" data-tip="Copy Selected id"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button><button class="tbtn" data-tip="Customize toolbar">···</button></div>
+<div style="height:1px;background:#2a2a2e"></div>
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><button class="trev" style="flex:1;justify-content:center" data-tip="Review queue — 3 picked">REVIEW <b>3</b> ▾</button><select class="tsel" style="flex:1" title="Separator: newline / numbered / comma / JSON"><option>NEWLINE</option><option>NUMBERED</option><option>COMMA</option><option>JSON</option></select></div>
+<div class="path-row">section[1] &gt; form[2] &gt; <code>button#sign-in</code></div>
+<div class="tb theme-mono" style="border:none;box-shadow:none;background:none;padding:0;border-radius:0"><button class="tpill" style="flex:1;justify-content:center;width:100%" data-tip="Copy path — click or Enter">Copy path</button></div>
+</div></div>
+</div></body></html>

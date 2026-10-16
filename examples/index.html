@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>copy-ui-path-lite — toolbox UI examples</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #161616; color: #f5f5f5; font: 14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; padding: 32px 24px 64px; }
+  main { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p.sub { color: #a3a3a3; margin: 0 0 28px; }
+  h2 { font-size: 15px; margin: 28px 0 10px; color: #fdba74; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  li { background: #1a1a1d; border: 1px solid #2e2e33; border-radius: 10px; padding: 14px 16px; }
+  a { color: #fdba74; text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+  .desc { color: #a3a3a3; font-size: 13px; margin-top: 4px; }
+  .tag { display: inline-block; font-size: 11px; color: #71717a; background: #232327; border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+</style></head><body><main>
+<h1>Toolbox UI — styles and variations</h1>
+<p class="sub">Self-contained HTML mockups of the floating toolbox. Open any file directly in a browser; no build step required.</p>
+<h2>Layout variations</h2>
+<ul>
+  <li><a href="toolbox-layouts.html">toolbox-layouts.html</a><span class="tag">V1 / V2 / V3</span><div class="desc">Re-skin of the dialog as a horizontal floating toolbox: full reference bar, bar plus expandable queue drawer, and an ultra-compact pill. Includes an icon-to-id mapping table.</div></li>
+</ul>
+<h2>Visual styles</h2>
+<ul>
+  <li><a href="toolbox-styles.html">toolbox-styles.html</a><span class="tag">S1 / S2 / S3</span><div class="desc">Consistent toolbar system with the same control sizes and radii, applied to Paper Frost, Mono Outline, and a three-row Grid stack. Interactive master bar with hover tips, queue pop-up, and settings tab.</div></li>
+    <li><a href="s3-grid-stack-fixed.html">s3-grid-stack-fixed.html</a><span class="tag">S3 fixed</span><div class="desc">Style S3 grid stack with a fixed 280×196px toolblock: width and height no longer grow with content.</div></li>
+    <li><a href="s3-grid-stack-minimal.html">s3-grid-stack-minimal.html</a><span class="tag">S3 minimal</span><div class="desc">Fixed 280×96px block with the smallest tool set: format select, Copy path, quit.</div></li>
+    <li><a href="toolbox-pure.html">toolbox-pure.html</a><span class="tag">pure</span><div class="desc">Clean standalone HTML, light sky-blue toolbox, only required icons (child, parent, settings, move, copy path, quit). No path or type preview.</div></li>
+</ul>
+<h2>Source of truth</h2>
+<ul>
+  <li><a href="../docs/a3-design-reference.html">a3-design-reference.html</a><div class="desc">Static mock of the original carbon-themed sidebar dialog.</div></li>
+  <li><a href="../themes/carbon.json">themes/carbon.json</a> · <a href="../themes/midnight.json">midnight</a> · <a href="../themes/paper.json">paper</a> · <a href="../themes/mono-outline.json">mono-outline</a><div class="desc">Color tokens. New themes are added here, then rendered with <code>make ui THEME=&lt;name&gt;</code>.</div></li>
+  <li><a href="../templates/picker_ui.j2">templates/picker_ui.j2</a><div class="desc">Backend binds to the UI by element id and class hooks, so any of these variations can be recreated by editing the template only.</div></li>
+</ul>
+</main></body></html>
