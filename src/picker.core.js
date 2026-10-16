@@ -592,6 +592,7 @@
   var copyBtn = shadow.querySelector('#copyBtn');
   var copyIdBtn = shadow.querySelector('#copyIdBtn');
   var quitBtn = shadow.querySelector('#quitBtn');
+  var addBtn = shadow.querySelector('#addBtn');
   var stepBackBtn = shadow.querySelector('#stepBackBtn');
   var stepNextBtn = shadow.querySelector('#stepNextBtn');
   var multiBtn = shadow.querySelector('#multiBtn');
@@ -912,6 +913,7 @@
     var tidStr = tid ? ' [' + tid.name + '=' + tid.value + ']' : '';
     var dim = Math.round(rect.width) + '\u00d7' + Math.round(rect.height);
     elInfo.textContent = tag + id + cls + tidStr + ' ' + dim;
+    updateAddBtn();
 
     // Hide crosshair on small elements
     overlay.style.cursor = (rect.width < SIZE_THRESHOLD_W || rect.height < SIZE_THRESHOLD_H) ? 'default' : 'crosshair';
@@ -1039,6 +1041,28 @@
       if (ev.key === 'Escape') ed.remove();
     });
   }
+  // The ``+`` button mirrors what left-click does in multi-pick mode, so it also
+  // works while the picker is frozen (when left-clicking only unfreezes).
+  // While frozen the live hover tracking is paused, so currentEl can be stale —
+  // resolve what is under the pointer right now instead.
+  function addTarget() {
+    if (!frozen) return currentEl;
+    try { return elFromPoint(lastX, lastY) || currentEl; } catch (e) { return currentEl; }
+  }
+  function canAdd() {
+    var el = addTarget();
+    return !!el && el !== document.body && el !== document.documentElement;
+  }
+  function updateAddBtn() {
+    if (!addBtn) return;
+    var el = addTarget();
+    var ok = !!el && el !== document.body && el !== document.documentElement;
+    addBtn.disabled = !ok;
+    addBtn.title = ok
+      ? 'Add ' + el.tagName.toLowerCase() + ' to picked paths'
+      : 'Hover an element to add it';
+    addBtn.setAttribute('aria-disabled', String(!ok));
+  }
   function renderQueue() {
     if (!queueList) return;
     queueList.textContent = '';
@@ -1146,7 +1170,10 @@
   }
 
   function addItem(el) {
-    if (!el || el === document.body || el === document.documentElement) return;
+    if (!el || el === document.body || el === document.documentElement) {
+      showToast('Hover an element first', true);
+      return;
+    }
     for (var i = 0; i < collected.length; i++) {
       if (collected[i].el === el) {
         showToast('Already added #' + collected[i].n, true);
@@ -1158,6 +1185,7 @@
     collected.push(item);
     addBadge(item);
     renderQueue();
+    updateAddBtn();
     showToast('Added #' + item.n);
   }
 
@@ -1302,9 +1330,12 @@
   }
 
   function onMouseMove(e) {
-    if (dragging || frozen || isNavigating) return;
     lastX = e.clientX;
     lastY = e.clientY;
+    if (dragging || frozen || isNavigating) {
+      updateAddBtn();
+      return;
+    }
     if (rafPending) return;
     rafPending = true;
     requestAnimationFrame(function () {
@@ -1359,7 +1390,9 @@
   }
 
   function onDragStart(e) {
-    if (e.target === quitBtn || (multiBtn && e.target === multiBtn)) return;
+    // Never drag by grabbing one of the bar's own controls. `e.target` is the
+    // inner <svg>/glyph rather than the <button>, so match up the tree.
+    if (e.target.closest && e.target.closest('.box button')) return;
     dragging = true;
     var rect = dialog.getBoundingClientRect();
     dragOffsetX = e.clientX - rect.left;
@@ -1392,6 +1425,10 @@
   quitBtn.addEventListener('click', quit);
   stepBackBtn.addEventListener('click', stepBack);
   stepNextBtn.addEventListener('click', stepNext);
+  if (addBtn) addBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    addItem(addTarget());
+  });
   if (multiBtn) multiBtn.addEventListener('click', function (e) { e.stopPropagation(); setMultiMode(!multiMode); });
   if (sepSelect) {
     sepSelect.addEventListener('change', function () {
@@ -1413,6 +1450,7 @@
   if (multiBtn) multiBtn.classList.toggle('active', multiMode);
   if (multiActions) multiActions.classList.toggle('open', multiMode);
   renderQueue();
+  updateAddBtn();
   window.__ctp_multi = {
     get: function () { return collected.map(function (it) { return it.el; }); },
     mode: function () { return multiMode; },

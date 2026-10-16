@@ -74,12 +74,12 @@ controls the syntax colors of the path preview (`url`, `path_tid`, `ctx_key`, �
 Edit `templates/picker_ui.j2`. The backend binds to the UI by **element id** and a few
 **class hooks** — keep these and any layout works:
 
-- ids (28): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
+- ids (29): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
   `settingsPanel`, `saveState`, `path-display`, `queue-list`, `queue-count`,
-  `sep-select`, `copyAllBtn`, `clearBtn`, `closeAfterCopy`, `multiBtn`, `quitBtn`,
-  `stepBackBtn`, `stepNextBtn`, `format-select`, `configBtn`, `config-checks`,
-  `config-custom`, `copyIdBtn`, `copyBtn`, `opt-nav`, `opt-move`, `opt-settings`,
-  `opt-info`
+  `sep-select`, `format-select`, `copyAllBtn`, `clearBtn`, `copyIdBtn`, `copyBtn`,
+  `addBtn`, `closeAfterCopy`, `multiBtn`, `quitBtn`, `stepBackBtn`, `stepNextBtn`,
+  `configBtn`, `config-checks`, `config-custom`, `opt-nav`, `opt-move`,
+  `opt-settings`, `opt-info`
 - classes: `tab` + `data-tab` on the tab buttons, `panel` + `data-panel` on the panels,
   `active` (`#multiBtn`, settings tabs), `open` (`#dialog`, `.preview-actions`),
   `has-items` (`#queue-list`), `closing`, `frozen` (`#dialog` / `#overlay`), plus the
@@ -125,7 +125,7 @@ into the page.
 
 ### The picker UI
 
-The picker opens as a compact **toolbox bar** — copy, freeze, multi-pick, settings, quit —
+The picker opens as a compact **toolbox bar** — copy, freeze, multi-pick, add, settings, quit —
 with the settings panel collapsed. Click **⚙** to open it above the bar; the panel is
 organised into three tabs:
 
@@ -140,6 +140,11 @@ Copy grabs that single path, Add Details attaches a note describing what the pat
 for (notes are keyed by path text, so they return when you re-pick the same element),
 and View Path expands the row to show the path in full. Once a second path is picked
 the toolbar's primary button switches from **Copy Path** to **Copy All Path**.
+
+The **+** button adds whatever is under the pointer to the picked list. It is the
+counterpart to left-clicking in multi-pick mode, and the reason it exists is that
+**freeze** changes what left-click does — while frozen, left-clicking unfreezes instead
+of adding, so **+** is how you keep building the list. It stays enabled while frozen.
 
 Everything saves itself as you change it — there is no Save button. Changes are written to
 `localStorage` under `ctp-lite-settings` (styles), `ctp-lite-notes` (path details), and
