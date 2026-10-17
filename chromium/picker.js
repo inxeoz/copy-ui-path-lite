@@ -143,7 +143,8 @@
     var segs = [];
     var cur = el;
     var depth = 0;
-    while (cur && cur !== document.documentElement && cur !== document.body && depth < 25) {
+    while (cur && depth < 25) {
+      if (cur !== el && (cur === document.documentElement || cur === document.body)) break;
       if (shouldSkip(cur)) { cur = cur.parentElement; depth++; continue; }
       var parent = cur.parentElement;
       if (!parent) {
@@ -168,7 +169,8 @@
     var path = [];
     var cur = el;
     var depth = 0;
-    while (cur && cur !== document.documentElement && cur !== document.body && depth < 25) {
+    while (cur && depth < 25) {
+      if (cur !== el && (cur === document.documentElement || cur === document.body)) break;
       if (shouldSkip(cur)) { cur = cur.parentElement; depth++; continue; }
       var parent = cur.parentElement;
       if (!parent) {
@@ -492,7 +494,8 @@
     var total = 0;
     var withId = 0;
     var cur = el;
-    while (cur && cur !== document.documentElement && cur !== document.body) {
+    while (cur) {
+      if (cur !== el && (cur === document.documentElement || cur === document.body)) break;
       if (shouldSkip(cur)) { cur = cur.parentElement; continue; }
       total++;
       if (getTestId(cur) || cur.id) withId++;
@@ -1794,12 +1797,12 @@
   }
   function canAdd() {
     var el = addTarget();
-    return !!el && el !== document.body && el !== document.documentElement;
+    return !!el;
   }
   function updateAddBtn() {
     if (!addBtn) return;
     var el = addTarget();
-    var ok = !!el && el !== document.body && el !== document.documentElement;
+    var ok = !!el;
     addBtn.disabled = !ok;
     addBtn.title = ok
       ? 'Add ' + el.tagName.toLowerCase() + ' to picked paths'
@@ -1931,7 +1934,7 @@
   }
 
   function addItem(el) {
-    if (!el || el === document.body || el === document.documentElement) {
+    if (!el) {
       showToast('Hover an element first', true);
       return;
     }
