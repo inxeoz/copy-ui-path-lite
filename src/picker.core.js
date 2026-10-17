@@ -1,5 +1,6 @@
 (function () {
   console.log('[copy-ui-path-lite] picker.js loaded');
+  var maxDepth = 25;
   if (document.getElementById('ctp-picker-root')) {
     console.log('[copy-ui-path-lite] picker already active, skipping');
     return;
@@ -139,7 +140,7 @@
     var segs = [];
     var cur = el;
     var depth = 0;
-    while (cur && depth < 25) {
+    while (cur && depth < maxDepth) {
       if (cur !== el && (cur === document.documentElement || cur === document.body)) break;
       if (shouldSkip(cur)) { cur = cur.parentElement; depth++; continue; }
       var parent = cur.parentElement;
@@ -157,7 +158,7 @@
       cur = cur.parentElement;
       depth++;
     }
-    if (depth >= 25) segs.unshift('...');
+    if (depth >= maxDepth) segs.unshift('...');
     return segs;
   }
 
@@ -165,7 +166,7 @@
     var path = [];
     var cur = el;
     var depth = 0;
-    while (cur && depth < 25) {
+    while (cur && depth < maxDepth) {
       if (cur !== el && (cur === document.documentElement || cur === document.body)) break;
       if (shouldSkip(cur)) { cur = cur.parentElement; depth++; continue; }
       var parent = cur.parentElement;
@@ -1138,7 +1139,7 @@
     var parts = [];
     var cur = el;
     var depth = 0;
-    while (cur && cur !== document.documentElement && depth < 25) {
+    while (cur && cur !== document.documentElement && depth < maxDepth) {
       parts.unshift(cur.tagName.toLowerCase());
       if (cur.parentElement) cur = cur.parentElement;
       else {
@@ -1225,6 +1226,7 @@
   var copyAllBtn = shadow.querySelector('#copyAllBtn');
   var clearBtn = shadow.querySelector('#clearBtn');
   var closeAfterCopyBox = shadow.querySelector('#closeAfterCopy');
+  var maxDepthInput = shadow.querySelector('#max-depth');
 
   // ── Settings (one localStorage record, debounced auto-save) ───────
   var SETTINGS_KEY = 'ctp-lite-settings';
@@ -1253,10 +1255,14 @@
   var sepStyle = settings.sep || 'newline';
   var sepCustom = settings.sepCustom || '\n\n';
   var closeAfterCopy = !!settings.closeAfterCopy;
+  settings.maxDepth = settings.maxDepth || '25';
+  maxDepth = parseInt(settings.maxDepth, 10) || 25;
+  if (maxDepth < 1) maxDepth = 1;
   var formatMode = settings.format || 'context';
   try { formatSelect.value = formatMode; } catch (e) {}
   try { sepSelect.value = sepStyle; } catch (e) {}
   if (closeAfterCopyBox) closeAfterCopyBox.checked = closeAfterCopy;
+  if (maxDepthInput) maxDepthInput.value = maxDepth;
   var sepCustomInput = shadow.querySelector('#sep-custom');
   if (sepCustomInput) { sepCustomInput.value = sepCustom; }
   var imgResoRange = shadow.querySelector('#imgreso-range');
@@ -2260,6 +2266,15 @@
   if (closeAfterCopyBox) closeAfterCopyBox.addEventListener('change', function () {
     closeAfterCopy = this.checked;
     settings.closeAfterCopy = closeAfterCopy;
+    autoSave();
+  });
+  if (maxDepthInput) maxDepthInput.addEventListener('change', function () {
+    var v = parseInt(maxDepthInput.value, 10);
+    if (!v || v < 1) v = 1;
+    if (v > 200) v = 200;
+    maxDepth = v;
+    maxDepthInput.value = v;
+    settings.maxDepth = String(v);
     autoSave();
   });
   window.addEventListener('scroll', repositionBadges, true);

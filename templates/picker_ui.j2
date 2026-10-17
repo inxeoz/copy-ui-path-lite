@@ -47,16 +47,16 @@
   /* The panel floats above the bar. A fixed auto-height box keeps its top edge
      when it grows, so the settings section must be out of flow — otherwise the
      panel opens off the bottom of the viewport. */
-  .settings { position: absolute; bottom: 100%; left: 0; right: 0; width: 100%; max-height: calc(100vh - 96px); overflow: auto; margin: 0; background: var(--panel); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; box-shadow: var(--shadow); padding: 14px 16px; text-align: left; font-family: {{ t.font_ui }}; }
+  .settings { position: absolute; bottom: 100%; left: 0; right: 0; width: 100%; height: 400px; max-height: calc(100vh - 96px); display: flex; flex-direction: column; overflow: hidden; margin: 0; background: var(--panel); border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; box-shadow: var(--shadow); padding: 14px 16px; text-align: left; font-family: {{ t.font_ui }}; }
   .tool.open .box { border-radius: 0 0 var(--radius) var(--radius); }
   .settings[hidden] { display: none; }
-  .settings h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; justify-content: space-between; }
+  .settings h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; }
   .save-state { font-size: 10px; font-weight: 400; color: var(--ok); }
-  .settings .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft); padding-bottom: 8px; }
+  .settings .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft); padding-bottom: 8px; flex: 0 0 auto; }
   .settings .tab { display: inline-flex; align-items: center; justify-content: center; width: auto; height: 26px; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }
   .settings .tab:hover { color: var(--ghost-ink); background: var(--ghost-bg); }
   .settings .tab.active { color: var(--ink); background: var(--ghost-bg); border-color: var(--soft); font-weight: 600; }
-  .panel { min-height: 118px; }
+  .panel { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 2px; }
   .panel[hidden] { display: none; }
 
   /* ── style panel ─────────────────────────────────────────────── */
@@ -156,6 +156,7 @@
       <div class="row"><span>Separator</span><select id="sep-select"><option value="newline">newline</option><option value="numbered">numbered</option><option value="comma">comma</option><option value="json">JSON</option><option value="custom">custom</option></select></div>
       <div class="row"><span>Custom separator</span><input id="sep-custom" type="text" placeholder="e.g. \\n\\n or ---" style="width:150px;height:28px;"></div>
       <div class="row"><label><input type="checkbox" id="closeAfterCopy"> close after copy</label></div>
+      <div class="row"><span>Max depth</span><input id="max-depth" type="number" min="1" max="200" style="width:80px;height:28px;"></div>
       <div class="side-div"></div>
       <div class="row"><label><input type="checkbox" id="opt-child" checked> to child</label></div>
       <div class="row"><label><input type="checkbox" id="opt-parent" checked> to parent</label></div>
