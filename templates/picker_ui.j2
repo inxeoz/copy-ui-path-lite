@@ -15,6 +15,21 @@
   }
   * { box-sizing: border-box; }
 
+  /* Runtime dark theme override (toggled via settings). */
+  #dialog.dark, #overlay.dark {
+    --bg: #1e293b; --ink: #e2e8f0; --panel: #0f172a;
+    --line: #334155; --soft: #334155; --accent: #22c55e;
+    --radius: 12px; --shadow: 0 4px 24px rgba(0,0,0,.25), 0 1px 4px rgba(0,0,0,.1);
+    --row-bg: #0f172a; --row-border: #243049;
+    --ghost-bg: #0f172a; --ghost-border: #334155; --ghost-ink: #e2e8f0;
+    --input-bg: #0f172a; --input-border: #334155;
+    --badge-bg: #FFD700; --badge-ink: #1E3A5F;
+    --muted: #94a3b8; --faint: #64748b; --code: #a7f3d0;
+    --ok: #22c55e; --err: #f87171;
+  }
+  #dialog.dark .box button.active { color: #ffffff; }
+  #dialog.dark .settings .save { color: #ffffff; }
+
   #overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; cursor: crosshair; pointer-events: auto; fill: {{ t.overlay_dim }}; }
   #ocean { fill: rgba(0, 0, 0, .12); }
   #island { fill: {{ t.island_fill }}; stroke: {{ t.island_stroke }}; stroke-width: 2; }
@@ -158,6 +173,7 @@
       <div class="row"><label><input type="checkbox" id="closeAfterCopy"> close after copy</label></div>
       <div class="row"><label><input type="checkbox" id="opt-instantCopy"> instant copy on click</label></div>
       <div class="row"><label><input type="checkbox" id="opt-showPathOnCopyHover" checked> show path on hovering on copy button</label></div>
+      <div class="row"><label><input type="checkbox" id="opt-darkTheme"> dark theme</label></div>
       <div class="row"><span>Max depth</span><input id="max-depth" type="number" min="1" max="200" style="width:80px;height:28px;"></div>
       <div class="side-div"></div>
       <div class="row"><label><input type="checkbox" id="opt-child" checked> to child</label></div>

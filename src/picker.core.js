@@ -1451,6 +1451,16 @@
   if (settings.showPathOnCopyHover === undefined) settings.showPathOnCopyHover = true;
   registerToggle('opt-showPathOnCopyHover', function () { updateCopyBtn(); });
 
+  // Dark theme toggle.
+  if (settings.darkTheme === undefined) settings.darkTheme = false;
+  function applyDarkTheme() {
+    var on = !!settings.darkTheme;
+    if (dialog) dialog.classList.toggle('dark', on);
+    if (overlay) overlay.classList.toggle('dark', on);
+  }
+  applyDarkTheme();
+  registerToggle('opt-darkTheme', function () { applyDarkTheme(); });
+
   // Highlight overlay
   var hlEl = document.createElement('div');
   hlEl.style.cssText = 'position:fixed;pointer-events:none;border:2px solid #4A90D9;z-index:2147483646;display:none;';
