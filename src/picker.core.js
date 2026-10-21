@@ -1475,6 +1475,23 @@
   } catch (e) {}
   registerToggle('opt-darkTheme', function () { applyDarkTheme(); });
 
+  // Highlight border color (hovered element outline + island).
+  if (!settings.highlightBorderColor) settings.highlightBorderColor = '#4A90D9';
+  var highlightBorderInput = shadow.querySelector('#highlight-border-color');
+  if (highlightBorderInput) {
+    highlightBorderInput.value = settings.highlightBorderColor;
+    function applyHighlightBorderColor() {
+      var c = settings.highlightBorderColor || '#4A90D9';
+      try { hlEl.style.borderColor = c; } catch (e) {}
+      try { island.style.stroke = c; } catch (e) {}
+    }
+    highlightBorderInput.addEventListener('change', function () {
+      var v = (highlightBorderInput.value || '').trim();
+      if (v) { settings.highlightBorderColor = v; autoSave(); applyHighlightBorderColor(); }
+    });
+    applyHighlightBorderColor();
+  }
+
   // Highlight overlay
   var hlEl = document.createElement('div');
   hlEl.style.cssText = 'position:fixed;pointer-events:none;border:2px solid #4A90D9;z-index:2147483646;display:none;';
