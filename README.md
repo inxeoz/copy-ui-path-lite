@@ -101,6 +101,11 @@ dialog's normal flow (`position: absolute; bottom: 100%`) — a fixed, auto-heig
 keeps its top edge when its content grows, so an in-flow panel would open below the
 bottom of the viewport.
 
+## Install (stores)
+
+- Firefox (AMO): https://addons.mozilla.org/en-US/firefox/addon/copy-ui-path-lite/
+- Chromium: load unpacked from `chromium/` (see development install below)
+
 ## Install (development)
 
 ### Firefox
