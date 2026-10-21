@@ -1451,14 +1451,28 @@
   if (settings.showPathOnCopyHover === undefined) settings.showPathOnCopyHover = true;
   registerToggle('opt-showPathOnCopyHover', function () { updateCopyBtn(); });
 
-  // Dark theme toggle.
-  if (settings.darkTheme === undefined) settings.darkTheme = false;
+  // Dark theme toggle. Undefined means "follow the system preference".
+  function systemDark() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches); }
+    catch (e) { return false; }
+  }
   function applyDarkTheme() {
-    var on = !!settings.darkTheme;
+    var on = (settings.darkTheme === undefined) ? systemDark() : !!settings.darkTheme;
     if (dialog) dialog.classList.toggle('dark', on);
     if (overlay) overlay.classList.toggle('dark', on);
+    var box = shadow.querySelector('#opt-darkTheme');
+    if (box && settings.darkTheme === undefined) box.checked = on;
   }
   applyDarkTheme();
+  // Follow system changes while the user has not chosen explicitly.
+  try {
+    var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq && mq.addEventListener) {
+      mq.addEventListener('change', function () {
+        if (settings.darkTheme === undefined) applyDarkTheme();
+      });
+    }
+  } catch (e) {}
   registerToggle('opt-darkTheme', function () { applyDarkTheme(); });
 
   // Highlight overlay
