@@ -27,6 +27,29 @@ Makefile     Build / sync / lint / run helpers
 
 \* `picker.js` is a generated file — see [UI templating](#ui-templating).
 
+## Code overview
+
+The extension is a single self-contained content script (`picker.js`) injected into the
+page. It renders a closed shadow-DOM toolbox and overlays, and never calls
+`browser.*`/`chrome.*`, so the same file ships in both Firefox and Chromium builds.
+
+- `src/picker.core.js` — all backend behavior: element walking, path building
+  (XPath / CSS / Playwright / Context / Classic Context), multi-pick queue and
+  numbered badges, freeze + to-child/to-parent navigation, computed-style config,
+  context-path layers (framework internals → build-plugin attributes → source-text
+  search → DOM fingerprint), settings persistence, and screenshot capture.
+- `templates/picker_ui.j2` — Jinja2 template for the toolbox markup and CSS. The
+  backend binds to it by element id and a few class hooks (see the id list below).
+- `themes/*.json` — color/font tokens. `themes/default.txt` picks the default.
+- `tools/build_ui.py` — renders the template with a theme and injects it into the
+  core at the `/*__CTP_UI__*/` marker, producing `firefox/picker.js`.
+- `Makefile` — `make ui` renders, `make sync` copies to `chromium/`, `make build`
+  packages both stores.
+
+Runtime flow: hover an element → `updateUI()` updates the spotlight, corner labels,
+and path preview; click either copies the path (instant-copy mode) or adds it to the
+picked list (multi-pick mode); settings and notes are saved to `localStorage`.
+
 ## UI templating
 
 The picker's UI is separated from its logic, so you can restyle the dialog without
