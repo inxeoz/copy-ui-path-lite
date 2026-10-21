@@ -482,6 +482,13 @@
     return formatPath(el);
   }
 
+  function getClassicContextPath(el) {
+    try {
+      var z = getZ(el);
+      return buildPathData(el, getSelectorPath(el, 'classic-context'), z).toText();
+    } catch (e) { return '(detached)'; }
+  }
+
   // The preview shows exactly the selector that will be copied for the current mode.
   function getPreviewPath(el, mode) {
     return getSelectorPath(el, mode);
@@ -2007,7 +2014,10 @@
       return contextBlocks.join('\n\n');
     }
     var paths = collected.map(function (item) {
-      try { return getSelectorPath(item.el, formatMode); } catch (e) { return '(detached)'; }
+      try {
+        if (formatMode === 'classic-context') return getClassicContextPath(item.el);
+        return getSelectorPath(item.el, formatMode);
+      } catch (e) { return '(detached)'; }
     });
     if (sepStyle === 'numbered') {
       return paths.map(function (p, i) { return (i + 1) + '. ' + p; }).join('\n');
@@ -2051,9 +2061,14 @@
     var zVal = getZ(currentEl);
     var selector = getSelectorPath(currentEl, formatMode);
     var isContextMode = (formatMode === 'auto' || formatMode === 'context');
-    var copyText = isContextMode
-      ? ('## 1. Element: ' + elLabel(currentEl) + '\n\n' + buildContextOutput(currentEl))
-      : selector;
+    var copyText;
+    if (isContextMode) {
+      copyText = '## 1. Element: ' + elLabel(currentEl) + '\n\n' + buildContextOutput(currentEl);
+    } else if (formatMode === 'classic-context') {
+      copyText = currentPath;
+    } else {
+      copyText = selector;
+    }
     var pct = calcTestidPercent(currentEl);
     console.log('[copy-ui-path-lite] ──────────────────────────────────────');
     console.log('[copy-ui-path-lite] COPIED TO CLIPBOARD:');
