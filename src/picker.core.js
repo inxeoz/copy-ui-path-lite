@@ -1218,7 +1218,6 @@
   var addBtn = shadow.querySelector('#addBtn');
   var stepBackBtn = shadow.querySelector('#stepBackBtn');
   var stepNextBtn = shadow.querySelector('#stepNextBtn');
-  var multiBtn = shadow.querySelector('#multiBtn');
   var queueList = shadow.querySelector('#queue-list');
   var multiActions = shadow.querySelector('#multi-actions');
   var queueCount = shadow.querySelector('#queue-count');
@@ -1251,7 +1250,7 @@
   var frozen = false;
   // ── Multi-pick state ─────────────────────────────────────────────
   var collected = [];
-  var multiMode = true;
+  var multiMode = (settings.instantCopy !== true);
   var sepStyle = settings.sep || 'newline';
   var sepCustom = settings.sepCustom || '\n\n';
   var closeAfterCopy = !!settings.closeAfterCopy;
@@ -1398,7 +1397,7 @@
   var TOOLBAR_TARGETS = {
     'opt-child': '#stepBackBtn',
     'opt-parent': '#stepNextBtn',
-    'opt-move': '#multiBtn',
+    'opt-move': '#moveBtn',
     'opt-settings': '#configBtn',
     'opt-info': '#el-info'
   };
@@ -1431,10 +1430,15 @@
       if (settings[key] === undefined) settings[key] = !!settings.nav;
     });
   }
+  if (settings.move === undefined) settings.move = true;
   Object.keys(TOOLBAR_TARGETS).forEach(function (id) {
     registerToggle(id, function () { applyToolbarToggle(id); });
   });
 
+  // Instant copy on click: when on, a click copies immediately instead of
+  // adding to the picked list. Off by default (multi-pick).
+  if (settings.instantCopy === undefined) settings.instantCopy = false;
+  registerToggle('opt-instantCopy', function () { applyInstantCopyMode(); });
 
   // Highlight overlay
   var hlEl = document.createElement('div');
@@ -1658,12 +1662,18 @@
     return p.length > 80 ? p.slice(0, 77) + '...' : p;
   }
 
+  function applyInstantCopyMode() {
+    multiMode = !settings.instantCopy;
+    if (multiActions) multiActions.classList.toggle('open', multiMode || collected.length > 0);
+  }
   function setMultiMode(on) {
-    multiMode = on;
-    if (multiBtn) multiBtn.classList.toggle('active', on);
-    if (multiActions) multiActions.classList.toggle('open', on);
-    if (!on) { /* keep collected so user can toggle back; badges stay */ }
-    showToast(on ? 'Multi-pick ON — click elements to add' : 'Multi-pick OFF');
+    // Compatibility shim: multi-pick mode is the inverse of instant copy.
+    settings.instantCopy = !on;
+    var box = shadow.querySelector('#opt-instantCopy');
+    if (box) box.checked = settings.instantCopy;
+    applyInstantCopyMode();
+    autoSave();
+    showToast(on ? 'Multi-pick ON — click elements to add' : 'Instant copy ON — click to copy');
   }
 
   function addBadge(item) {
@@ -1922,6 +1932,9 @@
       copyAllBtn.textContent = 'Copy All';
       copyAllBtn.disabled = collected.length === 0;
     }
+    // Keep the picked-paths panel visible in multi-pick mode or whenever
+    // there are collected paths.
+    if (multiActions) multiActions.classList.toggle('open', multiMode || collected.length > 0);
     // The toolbar's primary action follows the queue: one path copies what the
     // pointer is on, several paths copy the whole set.
     updateCopyBtn();
@@ -2158,7 +2171,7 @@
     var el = elFromPoint(e.clientX, e.clientY);
     if (el) {
       updateUI(el);
-      if (multiMode) { addItem(el); return; }
+      if (!settings.instantCopy) { addItem(el); return; }
       doCopy(e.ctrlKey);
     }
   }
@@ -2189,7 +2202,9 @@
   function onDragStart(e) {
     // Never drag by grabbing one of the bar's own controls. `e.target` is the
     // inner <svg>/glyph rather than the <button>, so match up the tree.
-    if (e.target.closest && e.target.closest('.box button')) return;
+    // The dedicated move handle is a button but must still initiate dragging.
+    var isMoveHandle = e.target.closest && e.target.closest('#moveBtn');
+    if (!isMoveHandle && e.target.closest && e.target.closest('.box button')) return;
     dragging = true;
     var rect = dialog.getBoundingClientRect();
     dragOffsetX = e.clientX - rect.left;
@@ -2230,7 +2245,6 @@
     addItem(addTarget());
     if (frozen) { unfreeze(); updateAddBtn(); }
   });
-  if (multiBtn) multiBtn.addEventListener('click', function (e) { e.stopPropagation(); setMultiMode(!multiMode); });
   if (sepSelect) {
     sepSelect.addEventListener('change', function () {
       sepStyle = this.value;
@@ -2279,8 +2293,7 @@
   });
   window.addEventListener('scroll', repositionBadges, true);
   window.addEventListener('resize', repositionBadges);
-  if (multiBtn) multiBtn.classList.toggle('active', multiMode);
-  if (multiActions) multiActions.classList.toggle('open', multiMode);
+  applyInstantCopyMode();
   renderQueue();
   updateAddBtn();
   updateCopyBtn();

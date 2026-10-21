@@ -122,9 +122,9 @@
     <button id="stepBackBtn" title="To child" aria-label="To child"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
     <button id="stepNextBtn" title="To parent" aria-label="To parent"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
     <button id="configBtn" title="Settings" aria-label="Settings" aria-expanded="false" aria-controls="settingsPanel"><svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-    <button id="multiBtn" title="Move" aria-label="Move"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></button>
     <button id="addBtn" title="Add to picked paths" aria-label="Add to picked paths">+</button>
     <button class="copy" id="copyBtn" title="Copy path" aria-label="Copy path">Copy path</button>
+    <button id="moveBtn" title="Drag to move" aria-label="Drag to move"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></button>
     <button class="close" id="quitBtn" title="Quit" aria-label="Quit"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
 
@@ -156,11 +156,12 @@
       <div class="row"><span>Separator</span><select id="sep-select"><option value="newline">newline</option><option value="numbered">numbered</option><option value="comma">comma</option><option value="json">JSON</option><option value="custom">custom</option></select></div>
       <div class="row"><span>Custom separator</span><input id="sep-custom" type="text" placeholder="e.g. \\n\\n or ---" style="width:150px;height:28px;"></div>
       <div class="row"><label><input type="checkbox" id="closeAfterCopy"> close after copy</label></div>
+      <div class="row"><label><input type="checkbox" id="opt-instantCopy"> instant copy on click</label></div>
       <div class="row"><span>Max depth</span><input id="max-depth" type="number" min="1" max="200" style="width:80px;height:28px;"></div>
       <div class="side-div"></div>
       <div class="row"><label><input type="checkbox" id="opt-child" checked> to child</label></div>
       <div class="row"><label><input type="checkbox" id="opt-parent" checked> to parent</label></div>
-      <div class="row"><label><input type="checkbox" id="opt-move" checked> show move</label></div>
+      <div class="row"><label><input type="checkbox" id="opt-move" checked> show move button</label></div>
       <div class="row"><label><input type="checkbox" id="opt-settings" checked> show settings</label></div>
       <div class="row"><label><input type="checkbox" id="opt-info" checked> show element info</label></div>
       <div class="side-div"></div>
