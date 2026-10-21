@@ -74,12 +74,12 @@ controls the syntax colors of the path preview (`url`, `path_tid`, `ctx_key`, â€
 Edit `templates/picker_ui.j2`. The backend binds to the UI by **element id** and a few
 **class hooks** â€” keep these and any layout works:
 
-- ids (37): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
+- ids (38): `overlay`, `ocean`, `island`, `dialog`, `dialog-header`, `el-info`,
   `settingsPanel`, `saveState`, `path-display`, `queue-list`, `queue-count`,
   `sep-select`, `format-select`, `copyAllBtn`, `clearBtn`, `copyIdBtn`, `copyBtn`,
   `addBtn`, `closeAfterCopy`, `moveBtn`, `multi-actions`, `quitBtn`, `stepBackBtn`,
   `stepNextBtn`, `configBtn`, `config-checks`, `config-custom`, `opt-child`,
-  `opt-parent`, `opt-move`, `opt-settings`, `opt-info`, `opt-instantCopy`, `opt-corner-tl`,
+  `opt-parent`, `opt-move`, `opt-settings`, `opt-info`, `opt-instantCopy`, `opt-showPathOnCopyHover`, `opt-corner-tl`,
   `opt-corner-tr`, `opt-corner-bl`, `opt-corner-br`
 - classes: `tab` + `data-tab` on the tab buttons, `panel` + `data-panel` on the panels,
   `active` (`#multiBtn`, settings tabs), `open` (`#dialog`, `.preview-actions`),

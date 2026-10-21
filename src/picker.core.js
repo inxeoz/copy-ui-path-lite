@@ -1447,6 +1447,10 @@
   if (settings.instantCopy === undefined) settings.instantCopy = false;
   registerToggle('opt-instantCopy', function () { applyInstantCopyMode(); });
 
+  // Show the full path in the Copy button tooltip while hovering.
+  if (settings.showPathOnCopyHover === undefined) settings.showPathOnCopyHover = true;
+  registerToggle('opt-showPathOnCopyHover', function () { updateCopyBtn(); });
+
   // Highlight overlay
   var hlEl = document.createElement('div');
   hlEl.style.cssText = 'position:fixed;pointer-events:none;border:2px solid #4A90D9;z-index:2147483646;display:none;';
@@ -1604,6 +1608,7 @@
     pathDisplay.textContent = '';
     pb.appendTo(pathDisplay);
     pathDisplay.title = currentPath;
+    updateCopyBtn();
   }
 
   function updateUI(el) {
@@ -1952,7 +1957,11 @@
     if (!copyBtn) return;
     var many = collected.length > 1;
     copyBtn.textContent = many ? 'Copy' : 'Copy path';
-    copyBtn.title = many ? 'Copy all ' + collected.length + ' picked paths' : 'Copy path';
+    if (settings.showPathOnCopyHover && currentPath) {
+      copyBtn.title = currentPath;
+    } else {
+      copyBtn.title = many ? 'Copy all ' + collected.length + ' picked paths' : 'Copy path';
+    }
   }
 
   function addItem(el) {
