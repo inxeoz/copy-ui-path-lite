@@ -2300,6 +2300,11 @@
   copyBtn.addEventListener('click', function (e) {
     // several paths picked -> the primary action becomes "copy them all"
     if (collected.length > 1) { doCopyAll(); return; }
+    // One queued path: copy that element, not whatever the pointer happens to
+    // be hovering (currentEl). Otherwise "Copy path" grabs the wrong element.
+    if (collected.length === 1 && collected[0].el && collected[0].el !== currentEl) {
+      updateUI(collected[0].el);
+    }
     doCopy(e.ctrlKey);
   });
   if (copyIdBtn) copyIdBtn.addEventListener('click', function(e) { doCopyId(e.ctrlKey); });
